@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import type { GeneratedIcon, StylePreset } from './types'
 import { PromptInput } from './components/PromptInput'
 import { StyleSelector } from './components/StyleSelector'
-import { ColorInput } from './components/ColorInput'
+import { ColorInput, validateHexColor } from './components/ColorInput'
+import { LoadingSpinner } from './components/LoadingSpinner'
 import { getStyles, generateIcons } from './services/api'
 import './App.css'
 
@@ -53,29 +54,38 @@ function App() {
 
   // Handler for form submission
   const handleGenerate = async () => {
-    // Validation
+    // Validate prompt - must not be empty
     if (!prompt.trim()) {
       setPromptError('Please enter a prompt')
       return
     }
+
+    // Validate style selection - must be selected
     if (!selectedStyle) {
       setError('Please select a style')
       return
     }
 
+    // Validate brand colors - filter out empty ones and validate HEX format
+    const nonEmptyColors = brandColors.filter(color => color.trim().length > 0)
+    const invalidColors = nonEmptyColors.filter(color => !validateHexColor(color))
+    
+    if (invalidColors.length > 0) {
+      setError('Please fix invalid brand color formats before generating')
+      return
+    }
+
+    // Clear any previous errors
     setPromptError('')
     setError(null)
     setLoading(true)
 
     try {
-      // Filter out empty brand colors before sending to API
-      const validBrandColors = brandColors.filter(color => color.trim().length > 0)
-      
-      // Call API to generate icons
+      // Call API to generate icons with validated inputs
       const generatedIcons = await generateIcons({
         prompt: prompt.trim(),
         styleId: selectedStyle,
-        brandColors: validBrandColors
+        brandColors: nonEmptyColors
       })
       
       setIcons(generatedIcons)
@@ -126,6 +136,7 @@ function App() {
                   value={prompt}
                   onChange={handlePromptChange}
                   error={promptError}
+                  disabled={loading}
                 />
 
                 {/* Style Selector */}
@@ -133,6 +144,7 @@ function App() {
                   styles={styles}
                   selectedStyle={selectedStyle}
                   onSelect={handleStyleSelect}
+                  disabled={loading}
                 />
 
                 {/* Color Input */}
@@ -140,6 +152,7 @@ function App() {
                   colors={brandColors}
                   onChange={setBrandColors}
                   maxColors={3}
+                  disabled={loading}
                 />
 
                 {/* Error Display */}
@@ -170,12 +183,7 @@ function App() {
 
               {/* Loading State */}
               {loading && (
-                <div className="flex items-center justify-center py-12">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-4 text-sm text-gray-600">Generating your icons...</p>
-                  </div>
-                </div>
+                <LoadingSpinner message="Generating your icons..." />
               )}
 
               {/* Empty State */}

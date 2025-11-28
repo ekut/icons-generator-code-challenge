@@ -4,13 +4,14 @@ export interface StyleSelectorProps {
   styles: StylePreset[];
   selectedStyle: string | null;
   onSelect: (styleId: string) => void;
+  disabled?: boolean;
 }
 
 /**
  * StyleSelector component for choosing visual style presets
  * Displays all available styles and highlights the selected one
  */
-export function StyleSelector({ styles, selectedStyle, onSelect }: StyleSelectorProps) {
+export function StyleSelector({ styles, selectedStyle, onSelect, disabled = false }: StyleSelectorProps) {
   return (
     <div className="mb-4">
       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -25,11 +26,12 @@ export function StyleSelector({ styles, selectedStyle, onSelect }: StyleSelector
               key={style.id}
               type="button"
               onClick={() => onSelect(style.id)}
+              disabled={disabled}
               className={`w-full text-left px-4 py-3 rounded-md border-2 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                 isSelected
                   ? 'border-blue-600 bg-blue-50 shadow-sm'
                   : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
-              }`}
+              } ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
               aria-pressed={isSelected}
             >
               <div className="flex items-start justify-between">

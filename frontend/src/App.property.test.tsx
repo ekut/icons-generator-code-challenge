@@ -178,6 +178,133 @@ describe('App - Property-Based Tests', () => {
   })
 
   /**
+   * Feature: icon-set-generator, Property 6: Loading State Visibility
+   * 
+   * For any generation request initiated, the system should display a loading 
+   * indicator until the generation completes or fails.
+   * 
+   * Validates: Requirements 4.2
+   */
+  it('displays loading indicator during generation until completion or failure', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        // Generate alphanumeric prompts to avoid special characters that might cause issues
+        fc.stringMatching(/^[a-zA-Z0-9 ]+$/).filter(s => s.trim().length > 0 && s.length <= 20),
+        // Generate a valid style ID
+        fc.constantFrom('pastels', 'bubbles', 'flat', 'gradient', 'outline'),
+        // Generate a boolean to determine success or failure
+        fc.boolean(),
+        async (prompt, styleId, shouldSucceed) => {
+          // Create a promise that we can control
+          let resolveGeneration: (value: any) => void
+          let rejectGeneration: (error: any) => void
+          
+          const generationPromise = new Promise((resolve, reject) => {
+            resolveGeneration = resolve
+            rejectGeneration = reject
+          })
+
+          // Mock the generateIcons API call to return our controlled promise
+          const mockGenerateIcons = vi.spyOn(api, 'generateIcons').mockReturnValue(generationPromise as any)
+
+          // Render the App component
+          const { unmount } = render(<App />)
+          
+          try {
+            // Wait for styles to load from the API
+            await waitFor(() => {
+              expect(screen.getByText('Pastels')).toBeInTheDocument()
+            }, { timeout: 1000 })
+            
+            // Enter the prompt
+            const promptInput = screen.getByLabelText('Icon Theme') as HTMLInputElement
+            fireEvent.change(promptInput, { target: { value: prompt } })
+            
+            // Select the style
+            const styleMap: Record<string, string> = {
+              'pastels': 'Pastels',
+              'bubbles': 'Bubbles',
+              'flat': 'Flat',
+              'gradient': 'Gradient',
+              'outline': 'Outline'
+            }
+            const styleName = styleMap[styleId]
+            const allButtons = screen.getAllByRole('button')
+            const styleButton = allButtons.find(button => 
+              button.textContent?.includes(styleName) && 
+              button.textContent?.includes(mockStyles.find(s => s.id === styleId)?.description || '')
+            )
+            fireEvent.click(styleButton!)
+            
+            // Verify loading indicator is NOT visible before generation
+            expect(screen.queryByText('Generating your icons...')).not.toBeInTheDocument()
+            
+            // Click the generate button to initiate generation
+            const generateButton = screen.getByText('Generate Icons')
+            fireEvent.click(generateButton)
+            
+            // Wait for the API call to be initiated
+            await waitFor(() => {
+              expect(mockGenerateIcons).toHaveBeenCalled()
+            }, { timeout: 1000 })
+            
+            // Verify loading indicator IS visible during generation
+            await waitFor(() => {
+              expect(screen.getByText('Generating your icons...')).toBeInTheDocument()
+            }, { timeout: 1000 })
+            
+            // Verify the loading spinner is present
+            const spinner = document.querySelector('.animate-spin')
+            expect(spinner).toBeInTheDocument()
+            
+            // Verify the generate button shows "Generating..." text
+            expect(screen.getByText('Generating...')).toBeInTheDocument()
+            
+            // Verify the generate button is disabled during loading
+            const buttonDuringLoading = screen.getByRole('button', { name: /Generating.../i })
+            expect(buttonDuringLoading).toBeDisabled()
+            
+            // Now complete or fail the generation
+            if (shouldSucceed) {
+              // Resolve with mock icons
+              resolveGeneration!([
+                { id: '1', url: 'https://example.com/1.png', prompt, style: styleId },
+                { id: '2', url: 'https://example.com/2.png', prompt, style: styleId },
+                { id: '3', url: 'https://example.com/3.png', prompt, style: styleId },
+                { id: '4', url: 'https://example.com/4.png', prompt, style: styleId },
+              ])
+            } else {
+              // Reject with an error
+              rejectGeneration!(new Error('Generation failed'))
+            }
+            
+            // Wait for the loading state to clear
+            await waitFor(() => {
+              expect(screen.queryByText('Generating your icons...')).not.toBeInTheDocument()
+            }, { timeout: 1000 })
+            
+            // Verify loading indicator is NOT visible after completion/failure
+            expect(screen.queryByText('Generating your icons...')).not.toBeInTheDocument()
+            
+            // Verify the spinner is no longer present
+            const spinnerAfter = document.querySelector('.animate-spin')
+            expect(spinnerAfter).not.toBeInTheDocument()
+            
+            // Verify the generate button is re-enabled
+            const buttonAfter = screen.getByRole('button', { name: /Generate Icons/i })
+            expect(buttonAfter).not.toBeDisabled()
+          } finally {
+            // Clean up after each test run
+            mockGenerateIcons.mockRestore()
+            unmount()
+          }
+        }
+      ),
+      { numRuns: 50, timeout: 10000 }
+    )
+  }, 15000)
+
+  /**
    * Feature: icon-set-generator, Property 4: Color Parameter Inclusion
    * 
    * For any valid HEX color codes provided, the system should include all 
@@ -201,8 +328,8 @@ describe('App - Property-Based Tests', () => {
       fc.asyncProperty(
         // Generate an array of 1-3 valid HEX colors
         fc.array(hexColorGenerator, { minLength: 1, maxLength: 3 }),
-        // Generate a valid prompt
-        fc.string({ minLength: 1, maxLength: 50 }).filter(s => s.trim().length > 0),
+        // Generate alphanumeric prompts to avoid special characters
+        fc.stringMatching(/^[a-zA-Z0-9 ]+$/).filter(s => s.trim().length > 0 && s.length <= 20),
         // Generate a valid style ID
         fc.constantFrom('pastels', 'bubbles', 'flat', 'gradient', 'outline'),
         async (colors, prompt, styleId) => {

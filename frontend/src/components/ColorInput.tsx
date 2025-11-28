@@ -4,6 +4,7 @@ export interface ColorInputProps {
   colors: string[];
   onChange: (colors: string[]) => void;
   maxColors?: number;
+  disabled?: boolean;
 }
 
 /**
@@ -20,7 +21,7 @@ export function validateHexColor(color: string): boolean {
  * Validates HEX format and shows validation errors
  * Supports multiple color inputs
  */
-export function ColorInput({ colors, onChange, maxColors = 3 }: ColorInputProps) {
+export function ColorInput({ colors, onChange, maxColors = 3, disabled = false }: ColorInputProps) {
   // Add a new color input field
   const handleAddColor = () => {
     if (colors.length < maxColors) {
@@ -77,11 +78,12 @@ export function ColorInput({ colors, onChange, maxColors = 3 }: ColorInputProps)
                     }
                     placeholder="#FF5733"
                     maxLength={7}
+                    disabled={disabled}
                     className={`flex-1 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 transition-colors ${
                       hasError
                         ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                         : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
-                    }`}
+                    } ${disabled ? 'bg-gray-100 cursor-not-allowed opacity-60' : ''}`}
                     aria-invalid={hasError ? 'true' : 'false'}
                     aria-describedby={hasError ? `color-error-${index}` : undefined}
                   />
@@ -90,7 +92,8 @@ export function ColorInput({ colors, onChange, maxColors = 3 }: ColorInputProps)
                   <button
                     type="button"
                     onClick={() => handleRemoveColor(index)}
-                    className="p-2 text-gray-400 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 rounded transition-colors"
+                    disabled={disabled}
+                    className="p-2 text-gray-400 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     aria-label={`Remove color ${index + 1}`}
                   >
                     <svg
@@ -129,7 +132,8 @@ export function ColorInput({ colors, onChange, maxColors = 3 }: ColorInputProps)
           <button
             type="button"
             onClick={handleAddColor}
-            className="w-full px-3 py-2 border-2 border-dashed border-gray-300 rounded-md text-sm text-gray-600 hover:border-gray-400 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+            disabled={disabled}
+            className="w-full px-3 py-2 border-2 border-dashed border-gray-300 rounded-md text-sm text-gray-600 hover:border-gray-400 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             + Add Brand Color
           </button>
