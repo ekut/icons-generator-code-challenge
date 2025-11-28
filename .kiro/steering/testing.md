@@ -140,6 +140,49 @@ Adding `-- --run` duplicates the flag and causes an error.
 - **Frontend tests**: `cd frontend && npm test`
 - **Watch mode** (for development): `npm run test:watch` (if configured)
 
+## Backward Compatibility (BC)
+
+**CRITICAL**: New functionality and tests MUST NOT break existing tests.
+
+### Rules
+
+1. **Before making changes**: Run all tests to ensure they pass
+   ```bash
+   cd backend && npm test
+   cd frontend && npm test
+   ```
+
+2. **After making changes**: Run all tests again to verify nothing broke
+   - All previously passing tests must still pass
+   - New tests should be added for new functionality
+   - If a test needs to change, document why in the commit message
+
+3. **Breaking changes**: If you must break existing tests:
+   - Document the reason clearly
+   - Update all affected tests
+   - Ensure the change is intentional, not accidental
+   - Get approval before merging
+
+4. **Property-based tests**: When updating generators or validation:
+   - Ensure existing test cases still work
+   - Add new test cases for new validation rules
+   - Use `async/await` with `fc.assert` to avoid unhandled rejections
+
+### Example
+
+```typescript
+// ❌ BAD - Breaking existing validation without updating tests
+// Old validation: prompt must not be empty
+// New validation: prompt must contain alphanumeric characters
+// This breaks tests that use prompts like "!!!" or "---"
+
+// ✅ GOOD - Update validation AND tests together
+// 1. Add new validation in handler
+// 2. Update test generators to produce valid data
+// 3. Add new tests for the new validation rule
+// 4. Verify all existing tests still pass
+```
+
 ## Cost Awareness
 
 Remember:

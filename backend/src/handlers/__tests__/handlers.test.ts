@@ -1,7 +1,8 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import { handler as generateHandler } from '../generate.js';
 import { handler as getStylesHandler } from '../getStyles.js';
+import { ReplicateService } from '../../services/replicate.js';
 
 /**
  * Helper to create a mock API Gateway event
@@ -102,6 +103,22 @@ describe('Lambda Handlers', () => {
   });
 
   describe('generate handler', () => {
+    beforeEach(() => {
+      // Set up environment variable for tests
+      process.env.REPLICATE_API_TOKEN = 'mock-token-for-testing';
+      
+      // Mock the ReplicateService.generateIcon method
+      vi.spyOn(ReplicateService.prototype, 'generateIcon').mockResolvedValue(
+        'https://replicate.delivery/mock/image.png'
+      );
+    });
+
+    afterEach(() => {
+      // Clean up mocks
+      vi.restoreAllMocks();
+      delete process.env.REPLICATE_API_TOKEN;
+    });
+
     it('should validate and accept valid request with CORS headers', async () => {
       const requestBody = {
         prompt: 'toys',
@@ -117,6 +134,9 @@ describe('Lambda Handlers', () => {
 
       const body = JSON.parse(response.body);
       expect(body).toHaveProperty('success');
+      expect(body.success).toBe(true);
+      expect(body).toHaveProperty('icons');
+      expect(body.icons).toHaveLength(4);
     });
 
     it('should reject empty prompt with validation error', async () => {
@@ -168,6 +188,116 @@ describe('Lambda Handlers', () => {
       expect(response.statusCode).toBe(200);
       expect(response.headers).toHaveProperty('Access-Control-Allow-Origin', '*');
       expect(response.headers).toHaveProperty('Access-Control-Allow-Methods');
+    });
+
+    it('should reject invalid style ID', async () => {
+      const requestBody = {
+        prompt: 'toys',
+        style: 'invalid-style',
+      };
+      const event = createMockEvent('POST', '/api/generate', JSON.stringify(requestBody));
+      const response = await generateHandler(event);
+
+      expect(response.statusCode).toBe(400);
+
+      const body = JSON.parse(response.body);
+      expect(body).toHaveProperty('error');
+      expect(body.code).toBe('VALIDATION_ERROR');
+      expect(body.error).toContain('Invalid style ID');
+    });
+
+    it('should reject invalid HEX color format', async () => {
+      const requestBody = {
+        prompt: 'toys',
+        style: 'pastels',
+        brandColors: ['invalid-color'],
+      };
+      const event = createMockEvent('POST', '/api/generate', JSON.stringify(requestBody));
+      const response = await generateHandler(event);
+
+      expect(response.statusCode).toBe(400);
+
+      const body = JSON.parse(response.body);
+      expect(body).toHaveProperty('error');
+      expect(body.code).toBe('VALIDATION_ERROR');
+      expect(body.error).toContain('Invalid HEX color format');
+    });
+
+    it('should accept valid HEX colors in both formats', async () => {
+      const requestBody = {
+        prompt: 'toys',
+        style: 'pastels',
+        brandColors: ['#FF5733', '#ABC'],
+      };
+      const event = createMockEvent('POST', '/api/generate', JSON.stringify(requestBody));
+      const response = await generateHandler(event);
+
+      expect(response.statusCode).toBe(200);
+
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(true);
+      expect(body.icons).toHaveLength(4);
+    });
+
+    it('should generate exactly 4 icons', async () => {
+      const requestBody = {
+        prompt: 'toys',
+        style: 'bubbles',
+      };
+      const event = createMockEvent('POST', '/api/generate', JSON.stringify(requestBody));
+      const response = await generateHandler(event);
+
+      expect(response.statusCode).toBe(200);
+
+      const body = JSON.parse(response.body);
+      expect(body.icons).toHaveLength(4);
+      
+      // Verify each icon has required properties
+      body.icons.forEach((icon: any) => {
+        expect(icon).toHaveProperty('id');
+        expect(icon).toHaveProperty('url');
+        expect(icon).toHaveProperty('prompt');
+        expect(icon).toHaveProperty('style');
+        expect(icon).toHaveProperty('generatedAt');
+        expect(icon.prompt).toBe('toys');
+        expect(icon.style).toBe('bubbles');
+      });
+    });
+
+    it('should call ReplicateService.generateIcon 4 times in parallel', async () => {
+      const requestBody = {
+        prompt: 'toys',
+        style: 'flat',
+      };
+      const event = createMockEvent('POST', '/api/generate', JSON.stringify(requestBody));
+      
+      const generateIconSpy = vi.spyOn(ReplicateService.prototype, 'generateIcon');
+      
+      await generateHandler(event);
+
+      expect(generateIconSpy).toHaveBeenCalledTimes(4);
+    });
+
+    it('should handle API errors gracefully', async () => {
+      // Mock generateIcon to throw an error
+      vi.spyOn(ReplicateService.prototype, 'generateIcon').mockRejectedValue(
+        new Error('Failed to generate icon: API error')
+      );
+
+      const requestBody = {
+        prompt: 'toys',
+        style: 'pastels',
+      };
+      const event = createMockEvent('POST', '/api/generate', JSON.stringify(requestBody));
+      const response = await generateHandler(event);
+
+      expect(response.statusCode).toBe(500);
+
+      const body = JSON.parse(response.body);
+      expect(body).toHaveProperty('error');
+      // With Promise.allSettled, all failures result in GENERATION_ERROR
+      expect(body.code).toBe('GENERATION_ERROR');
+      expect(body.error).toContain('Generated 0 out of 4 icons');
     });
   });
 });
