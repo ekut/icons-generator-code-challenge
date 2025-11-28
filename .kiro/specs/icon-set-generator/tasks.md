@@ -21,34 +21,34 @@
     - Add CORS headers to responses
     - _Requirements: 9.1_
 
-  - [ ] 2.2 Implement Replicate API client service
+  - [x] 2.2 Implement Replicate API client service
     - Create ReplicateService class
     - Implement authentication with API token
     - Create method for single icon generation
     - Implement prompt construction logic
     - _Requirements: 7.1, 7.2, 7.3_
 
-  - [ ] 2.3 Write property test for prompt construction
+  - [x] 2.3 Write property test for prompt construction
     - **Property 15: Prompt Construction Completeness**
     - **Validates: Requirements 7.3, 10.1, 10.3**
 
-  - [ ] 2.4 Implement retry logic for API calls
+  - [x] 2.4 Implement retry logic for API calls
     - Add exponential backoff retry mechanism
     - Handle transient failures (5xx, timeouts)
     - Configure maximum retry attempts
     - _Requirements: 9.4_
 
-  - [ ] 2.5 Write property test for retry logic
+  - [x] 2.5 Write property test for retry logic
     - **Property 17: Retry Logic for Transient Failures**
     - **Validates: Requirements 9.4**
 
-  - [ ] 2.6 Create error handling utilities
+  - [x] 2.6 Create error handling utilities
     - Implement ErrorHandler class
     - Map API errors to user-friendly messages
     - Handle validation, API, and network errors
     - _Requirements: 9.3_
 
-  - [ ] 2.7 Write unit tests for error handling
+  - [x] 2.7 Write unit tests for error handling
     - Test error categorization
     - Test error message generation
     - Test recoverable vs non-recoverable errors

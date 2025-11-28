@@ -1,4 +1,5 @@
 import { APIGatewayProxyResult } from 'aws-lambda';
+import { ErrorHandler, UserFacingError } from './errorHandler.js';
 
 /**
  * CORS headers for API Gateway responses
@@ -40,6 +41,29 @@ export function formatErrorResponse(
       error: message,
       code,
       details,
+    }),
+  };
+}
+
+/**
+ * Format an error response using the ErrorHandler
+ * Automatically maps errors to user-friendly messages
+ * 
+ * @param error - The error to format
+ * @returns API Gateway response with appropriate status code and message
+ */
+export function formatErrorWithHandler(error: unknown): APIGatewayProxyResult {
+  const userError: UserFacingError = ErrorHandler.handle(error);
+  
+  return {
+    statusCode: userError.statusCode,
+    headers: CORS_HEADERS,
+    body: JSON.stringify({
+      error: userError.message,
+      code: userError.code,
+      type: userError.type,
+      recoverable: userError.recoverable,
+      retryAfter: userError.retryAfter,
     }),
   };
 }

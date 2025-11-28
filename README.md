@@ -85,6 +85,28 @@ The app will be available at `http://localhost:5173`
 
 ## Development
 
+### Development Without Real API Token
+
+**IMPORTANT**: During development, you don't need a real Replicate API token!
+
+All tests use mocks and don't make real API calls. You can develop and test locally with:
+
+```bash
+# Backend .env
+REPLICATE_API_TOKEN=mock-token-for-development
+```
+
+This approach:
+- ✅ Saves API costs (tokens are not ours)
+- ✅ Enables offline development
+- ✅ Makes tests fast and reliable
+- ✅ Avoids rate limits
+
+**Only use a real token when:**
+- Testing final integration before deployment
+- Debugging specific API issues
+- Validating production deployment
+
 ### Running Tests
 
 **Frontend:**
@@ -97,8 +119,10 @@ npm run test:watch    # Run tests in watch mode
 **Backend:**
 ```bash
 cd backend
-npm test
+npm test              # All tests use mocks - no real API calls!
 ```
+
+**Note**: All tests are designed to work without real API calls. They use mocks and fixtures to simulate Replicate API responses.
 
 ### Building for Production
 

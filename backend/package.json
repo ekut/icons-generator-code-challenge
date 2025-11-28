@@ -22,6 +22,7 @@
     "@types/node": "^24.10.1",
     "@vitest/ui": "^4.0.14",
     "esbuild": "^0.27.0",
+    "fast-check": "^4.3.0",
     "serverless": "^4.25.0",
     "serverless-offline": "^14.4.0",
     "typescript": "^5.9.3",

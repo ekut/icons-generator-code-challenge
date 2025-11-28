@@ -44,3 +44,13 @@ export interface APIError {
 export type LambdaHandler = (
   event: APIGatewayProxyEvent
 ) => Promise<APIGatewayProxyResult>;
+
+// Re-export error handler types for convenience
+export {
+  ErrorCategory,
+  UserFacingError,
+  ValidationError,
+  APIError as APIErrorClass,
+  NetworkError,
+  ErrorHandler,
+} from '../handlers/errorHandler.js';

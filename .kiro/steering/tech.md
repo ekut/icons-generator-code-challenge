@@ -20,6 +20,23 @@
 - **Image Generation**: Replicate API (FLUX-schnell model)
 - **Local Development**: serverless-offline
 
+### Development Policy: Minimize External API Calls
+
+**CRITICAL**: During development, **NEVER** make real calls to the Replicate API unless absolutely necessary for final integration testing.
+
+**Requirements:**
+- All tests MUST use mocks/stubs for Replicate API calls
+- Local development MUST NOT require a valid Replicate API token
+- Use mock data and responses for development and testing
+- Only make real API calls when explicitly testing end-to-end integration
+- Document any real API calls in commit messages
+
+**Rationale:**
+- API tokens are not ours and have usage limits
+- Avoid unnecessary costs during development
+- Tests should be fast and not depend on external services
+- Enable offline development
+
 ### Why ES Modules for Lambda?
 
 AWS Lambda **recommends ES modules** for Node.js functions because:
