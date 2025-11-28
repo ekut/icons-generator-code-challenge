@@ -275,21 +275,21 @@
     - _Requirements: 4.4, 8.3_
 
 - [ ] 11. Add image validation
-  - [ ] 11.1 Implement image dimension validation
+  - [x] 11.1 Implement image dimension validation
     - Verify generated images are 512x512
     - Handle invalid dimensions
     - _Requirements: 5.1_
 
-  - [ ] 11.2 Write property test for image resolution
+  - [x] 11.2 Write property test for image resolution
     - **Property 10: Image Resolution Invariant**
     - **Validates: Requirements 5.1**
 
-  - [ ] 11.3 Implement image format validation
+  - [x] 11.3 Implement image format validation
     - Verify images are PNG format
     - Handle invalid formats
     - _Requirements: 5.2_
 
-  - [ ] 11.4 Write property test for image format
+  - [x] 11.4 Write property test for image format
     - **Property 11: Image Format Invariant**
     - **Validates: Requirements 5.2**
 

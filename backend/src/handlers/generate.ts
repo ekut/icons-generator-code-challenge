@@ -3,6 +3,7 @@ import { GenerateRequest, GenerateResponse, GeneratedIcon } from '../types/index
 import { formatSuccessResponse, formatErrorResponse, parseRequestBody } from './utils.js';
 import { ReplicateService } from '../services/replicate.js';
 import { getStyleById, isValidStyleId } from '../constants/stylePresets.js';
+import { validateIconDimensions } from '../services/imageValidator.js';
 
 /**
  * Lambda handler for generating icon sets
@@ -163,6 +164,53 @@ export const handler = async (
         'GENERATION_ERROR'
       );
     }
+
+    // Validate image dimensions for all generated icons
+    // Requirements: 5.1 - Each icon must be 512x512 pixels
+    console.log('Validating image dimensions...');
+    const dimensionValidationStartTime = Date.now();
+
+    const dimensionValidations = await Promise.allSettled(
+      icons.map(async (icon, index) => {
+        try {
+          const isValid = await validateIconDimensions(icon.url);
+          if (!isValid) {
+            throw new Error(`Icon ${index + 1} has invalid dimensions (expected 512x512)`);
+          }
+          return true;
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown validation error';
+          throw new Error(`Icon ${index + 1} dimension validation failed: ${errorMessage}`);
+        }
+      })
+    );
+
+    const dimensionValidationDuration = Date.now() - dimensionValidationStartTime;
+    console.log(`Dimension validation completed in ${dimensionValidationDuration}ms`);
+
+    // Check for dimension validation failures
+    const dimensionFailures: string[] = [];
+    dimensionValidations.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        const errorMessage = result.reason instanceof Error 
+          ? result.reason.message 
+          : 'Unknown validation error';
+        dimensionFailures.push(errorMessage);
+        console.error(`Dimension validation failed for icon ${index + 1}:`, errorMessage);
+      }
+    });
+
+    // If any dimension validations failed, return an error
+    if (dimensionFailures.length > 0) {
+      console.error(`Dimension validation failed for ${dimensionFailures.length} icons`);
+      return formatErrorResponse(
+        `Generated icons have invalid dimensions. ${dimensionFailures.join('; ')}`,
+        500,
+        'VALIDATION_ERROR'
+      );
+    }
+
+    console.log('All icons passed dimension validation (512x512)');
 
     // Return successful response
     const response: GenerateResponse = {

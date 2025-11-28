@@ -3,6 +3,7 @@ import * as fc from 'fast-check';
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import { handler as generateHandler } from '../generate.js';
 import { ReplicateService } from '../../services/replicate.js';
+import * as imageValidator from '../../services/imageValidator.js';
 
 /**
  * Property-Based Tests for Generate Handler
@@ -50,6 +51,9 @@ describe('Generate Handler - Property-Based Tests', () => {
     generateIconSpy = vi.spyOn(ReplicateService.prototype, 'generateIcon').mockImplementation(
       async () => `https://replicate.delivery/mock/image-${Date.now()}-${Math.random()}.png`
     );
+
+    // Mock the image dimension validation to always pass
+    vi.spyOn(imageValidator, 'validateIconDimensions').mockResolvedValue(true);
   });
 
   afterEach(() => {

@@ -3,6 +3,7 @@ import { APIGatewayProxyEvent } from 'aws-lambda';
 import { handler as generateHandler } from '../generate.js';
 import { handler as getStylesHandler } from '../getStyles.js';
 import { ReplicateService } from '../../services/replicate.js';
+import * as imageValidator from '../../services/imageValidator.js';
 
 /**
  * Helper to create a mock API Gateway event
@@ -111,6 +112,9 @@ describe('Lambda Handlers', () => {
       vi.spyOn(ReplicateService.prototype, 'generateIcon').mockResolvedValue(
         'https://replicate.delivery/mock/image.png'
       );
+
+      // Mock the image dimension validation to always pass
+      vi.spyOn(imageValidator, 'validateIconDimensions').mockResolvedValue(true);
     });
 
     afterEach(() => {
@@ -298,6 +302,46 @@ describe('Lambda Handlers', () => {
       // With Promise.allSettled, all failures result in GENERATION_ERROR
       expect(body.code).toBe('GENERATION_ERROR');
       expect(body.error).toContain('Generated 0 out of 4 icons');
+    });
+
+    it('should reject icons with invalid dimensions', async () => {
+      // Mock dimension validation to fail
+      vi.spyOn(imageValidator, 'validateIconDimensions').mockResolvedValue(false);
+
+      const requestBody = {
+        prompt: 'toys',
+        style: 'pastels',
+      };
+      const event = createMockEvent('POST', '/api/generate', JSON.stringify(requestBody));
+      const response = await generateHandler(event);
+
+      expect(response.statusCode).toBe(500);
+
+      const body = JSON.parse(response.body);
+      expect(body).toHaveProperty('error');
+      expect(body.code).toBe('VALIDATION_ERROR');
+      expect(body.error).toContain('invalid dimensions');
+    });
+
+    it('should handle dimension validation errors', async () => {
+      // Mock dimension validation to throw an error
+      vi.spyOn(imageValidator, 'validateIconDimensions').mockRejectedValue(
+        new Error('Failed to fetch image')
+      );
+
+      const requestBody = {
+        prompt: 'toys',
+        style: 'pastels',
+      };
+      const event = createMockEvent('POST', '/api/generate', JSON.stringify(requestBody));
+      const response = await generateHandler(event);
+
+      expect(response.statusCode).toBe(500);
+
+      const body = JSON.parse(response.body);
+      expect(body).toHaveProperty('error');
+      expect(body.code).toBe('VALIDATION_ERROR');
+      expect(body.error).toContain('dimension validation failed');
     });
   });
 });
