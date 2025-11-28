@@ -294,11 +294,11 @@
     - **Validates: Requirements 5.2**
 
 - [ ] 12. Implement API endpoint correctness verification
-  - [ ] 12.1 Write property test for API endpoint correctness
+  - [x] 12.1 Write property test for API endpoint correctness
     - **Property 14: API Endpoint Correctness**
     - **Validates: Requirements 7.1, 7.2**
 
-  - [ ] 12.2 Write property test for API response handling
+  - [x] 12.2 Write property test for API response handling
     - **Property 16: API Response Handling**
     - **Validates: Requirements 7.4**
 

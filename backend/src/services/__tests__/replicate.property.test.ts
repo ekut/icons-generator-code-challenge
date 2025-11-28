@@ -503,4 +503,231 @@ describe('ReplicateService - Property-Based Tests', () => {
       );
     });
   });
+
+  /**
+   * Feature: icon-set-generator, Property 14: API Endpoint Correctness
+   * Validates: Requirements 7.1, 7.2
+   * 
+   * Property: For any API request to Replicate, the system should use the 
+   * FLUX-schnell model endpoint and include the API token in the authorization header.
+   */
+  describe('Property 14: API Endpoint Correctness', () => {
+    it('should use the correct FLUX-schnell model endpoint for any valid generation request', () => {
+      const promptArb = fc.string({ minLength: 1, maxLength: 200 });
+      
+      const styleArb = fc.record({
+        id: fc.string({ minLength: 1 }),
+        name: fc.string({ minLength: 1 }),
+        description: fc.string(),
+        promptModifiers: fc.array(fc.string({ minLength: 1 }), { minLength: 1, maxLength: 10 }),
+      });
+
+      const hexCharArb = fc.constantFrom('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F');
+      const hexColorArb = fc.array(hexCharArb, { minLength: 6, maxLength: 6 })
+        .map(chars => `#${chars.join('')}`);
+      const brandColorsArb = fc.option(fc.array(hexColorArb, { minLength: 1, maxLength: 5 }), { nil: undefined });
+
+      fc.assert(
+        fc.asyncProperty(promptArb, styleArb, brandColorsArb, async (userPrompt, style, brandColors) => {
+          const apiToken = 'test-api-token-' + Math.random().toString(36).substring(7);
+          const service = new ReplicateService(apiToken);
+          
+          // Mock the client.run method to capture the call
+          let capturedModelEndpoint: string | undefined;
+          let capturedInput: any;
+          
+          const mockRun = async (model: string, options: any) => {
+            capturedModelEndpoint = model;
+            capturedInput = options.input;
+            // Return a mock response
+            return ['https://example.com/mock-image.png'];
+          };
+          
+          // Replace the run method with our mock
+          (service as any).client.run = mockRun;
+          
+          // Call generateIcon
+          await service.generateIcon(userPrompt, style, brandColors);
+          
+          // Verify the correct model endpoint was used
+          expect(capturedModelEndpoint).toBe('black-forest-labs/flux-schnell');
+          
+          // Verify the input contains expected parameters
+          expect(capturedInput).toBeDefined();
+          expect(capturedInput.prompt).toBeDefined();
+          expect(capturedInput.num_outputs).toBe(1);
+          expect(capturedInput.aspect_ratio).toBe('1:1');
+          expect(capturedInput.output_format).toBe('png');
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should initialize Replicate client with the provided API token for any valid token', () => {
+      // Generator for various API token formats
+      const apiTokenArb = fc.oneof(
+        // Standard format tokens
+        fc.string({ minLength: 20, maxLength: 100 }),
+        // Tokens with special characters
+        fc.array(
+          fc.constantFrom(
+            ...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_'.split('')
+          ),
+          { minLength: 20, maxLength: 100 }
+        ).map(chars => chars.join('')),
+        // UUID-like tokens
+        fc.uuid(),
+        // Prefixed tokens
+        fc.string({ minLength: 10, maxLength: 50 }).map(s => `r8_${s}`)
+      );
+
+      fc.assert(
+        fc.property(apiTokenArb, (apiToken) => {
+          // Create service with the token
+          const service = new ReplicateService(apiToken);
+          
+          // Verify the client was initialized (it should have a client property)
+          expect((service as any).client).toBeDefined();
+          
+          // Verify the client has the auth property set
+          // Note: We can't directly access the auth token from the Replicate client,
+          // but we can verify the client was created successfully
+          expect((service as any).client.auth).toBeDefined();
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should reject empty API tokens', () => {
+      // The constructor only checks for falsy values (empty string)
+      // Whitespace-only strings are technically valid per the current implementation
+      expect(() => new ReplicateService('')).toThrow('Replicate API token is required');
+    });
+
+    it('should pass API token to Replicate client for authentication in any API call', () => {
+      const promptArb = fc.string({ minLength: 1, maxLength: 200 });
+      
+      const styleArb = fc.record({
+        id: fc.string({ minLength: 1 }),
+        name: fc.string({ minLength: 1 }),
+        description: fc.string(),
+        promptModifiers: fc.array(fc.string({ minLength: 1 }), { minLength: 1, maxLength: 10 }),
+      });
+
+      const apiTokenArb = fc.string({ minLength: 20, maxLength: 100 });
+
+      fc.assert(
+        fc.asyncProperty(promptArb, styleArb, apiTokenArb, async (userPrompt, style, apiToken) => {
+          const service = new ReplicateService(apiToken);
+          
+          // Verify the client has the auth token set
+          const clientAuth = (service as any).client.auth;
+          expect(clientAuth).toBe(apiToken);
+          
+          // Mock the run method to verify it's called
+          let runWasCalled = false;
+          const mockRun = async () => {
+            runWasCalled = true;
+            return ['https://example.com/mock-image.png'];
+          };
+          
+          (service as any).client.run = mockRun;
+          
+          // Call generateIcon
+          await service.generateIcon(userPrompt, style);
+          
+          // Verify the run method was called (which would use the auth token)
+          expect(runWasCalled).toBe(true);
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should use consistent model endpoint across multiple generation requests', () => {
+      const promptArb = fc.string({ minLength: 1, maxLength: 200 });
+      
+      const styleArb = fc.record({
+        id: fc.string({ minLength: 1 }),
+        name: fc.string({ minLength: 1 }),
+        description: fc.string(),
+        promptModifiers: fc.array(fc.string({ minLength: 1 }), { minLength: 1, maxLength: 10 }),
+      });
+
+      // Generate multiple prompts and styles
+      const requestsArb = fc.array(
+        fc.record({
+          prompt: promptArb,
+          style: styleArb,
+        }),
+        { minLength: 2, maxLength: 5 }
+      );
+
+      fc.assert(
+        fc.asyncProperty(requestsArb, async (requests) => {
+          const apiToken = 'test-token-' + Math.random().toString(36).substring(7);
+          const service = new ReplicateService(apiToken);
+          
+          const capturedEndpoints: string[] = [];
+          
+          const mockRun = async (model: string) => {
+            capturedEndpoints.push(model);
+            return ['https://example.com/mock-image.png'];
+          };
+          
+          (service as any).client.run = mockRun;
+          
+          // Make multiple generation requests
+          for (const request of requests) {
+            await service.generateIcon(request.prompt, request.style);
+          }
+          
+          // Verify all requests used the same correct endpoint
+          expect(capturedEndpoints.length).toBe(requests.length);
+          capturedEndpoints.forEach(endpoint => {
+            expect(endpoint).toBe('black-forest-labs/flux-schnell');
+          });
+        }),
+        { numRuns: 50 } // Fewer runs since this tests multiple requests per run
+      );
+    });
+
+    it('should include required parameters in API request for any valid input', () => {
+      const promptArb = fc.string({ minLength: 1, maxLength: 200 });
+      
+      const styleArb = fc.record({
+        id: fc.string({ minLength: 1 }),
+        name: fc.string({ minLength: 1 }),
+        description: fc.string(),
+        promptModifiers: fc.array(fc.string({ minLength: 1 }), { minLength: 1, maxLength: 10 }),
+      });
+
+      fc.assert(
+        fc.asyncProperty(promptArb, styleArb, async (userPrompt, style) => {
+          const service = new ReplicateService('test-token');
+          
+          let capturedOptions: any;
+          
+          const mockRun = async (model: string, options: any) => {
+            capturedOptions = options;
+            return ['https://example.com/mock-image.png'];
+          };
+          
+          (service as any).client.run = mockRun;
+          
+          await service.generateIcon(userPrompt, style);
+          
+          // Verify required parameters are present
+          expect(capturedOptions).toBeDefined();
+          expect(capturedOptions.input).toBeDefined();
+          expect(capturedOptions.input.prompt).toBeDefined();
+          expect(typeof capturedOptions.input.prompt).toBe('string');
+          expect(capturedOptions.input.num_outputs).toBe(1);
+          expect(capturedOptions.input.aspect_ratio).toBe('1:1');
+          expect(capturedOptions.input.output_format).toBe('png');
+          expect(capturedOptions.input.output_quality).toBe(100);
+        }),
+        { numRuns: 100 }
+      );
+    });
+  });
 });
