@@ -1,10 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { GeneratedIcon, StylePreset } from './types'
+import { PromptInput } from './components/PromptInput'
+import { StyleSelector } from './components/StyleSelector'
+import { ColorInput } from './components/ColorInput'
+import { getStyles, generateIcons } from './services/api'
 import './App.css'
 
 function App() {
   // State management for the application
   const [prompt, setPrompt] = useState<string>('')
+  const [promptError, setPromptError] = useState<string>('')
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null)
   const [brandColors, setBrandColors] = useState<string[]>([])
   const [icons, setIcons] = useState<GeneratedIcon[]>([])
@@ -12,11 +17,45 @@ function App() {
   const [error, setError] = useState<string | null>(null)
   const [styles, setStyles] = useState<StylePreset[]>([])
 
+  // Fetch available styles on component mount
+  useEffect(() => {
+    const fetchStyles = async () => {
+      try {
+        const fetchedStyles = await getStyles()
+        setStyles(fetchedStyles)
+      } catch (err) {
+        console.error('Failed to fetch styles:', err)
+        // Set error but don't block the UI
+        setError('Failed to load styles. Please refresh the page.')
+      }
+    }
+
+    fetchStyles()
+  }, [])
+
+  // Handler for prompt changes
+  const handlePromptChange = (value: string) => {
+    setPrompt(value)
+    // Clear error when user starts typing
+    if (promptError) {
+      setPromptError('')
+    }
+  }
+
+  // Handler for style selection
+  const handleStyleSelect = (styleId: string) => {
+    setSelectedStyle(styleId)
+    // Clear error when user selects a style
+    if (error === 'Please select a style') {
+      setError(null)
+    }
+  }
+
   // Handler for form submission
   const handleGenerate = async () => {
     // Validation
     if (!prompt.trim()) {
-      setError('Please enter a prompt')
+      setPromptError('Please enter a prompt')
       return
     }
     if (!selectedStyle) {
@@ -24,15 +63,22 @@ function App() {
       return
     }
 
+    setPromptError('')
     setError(null)
     setLoading(true)
 
     try {
-      // TODO: Call API to generate icons (will be implemented in task 6.2)
-      console.log('Generating icons with:', { prompt, selectedStyle, brandColors })
+      // Filter out empty brand colors before sending to API
+      const validBrandColors = brandColors.filter(color => color.trim().length > 0)
       
-      // Placeholder for now
-      setIcons([])
+      // Call API to generate icons
+      const generatedIcons = await generateIcons({
+        prompt: prompt.trim(),
+        styleId: selectedStyle,
+        brandColors: validBrandColors
+      })
+      
+      setIcons(generatedIcons)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
@@ -75,40 +121,26 @@ function App() {
                   Create Your Icon Set
                 </h2>
 
-                {/* Prompt Input - Placeholder */}
-                <div className="mb-4">
-                  <label htmlFor="prompt" className="block text-sm font-medium text-gray-700 mb-2">
-                    Icon Theme
-                  </label>
-                  <input
-                    id="prompt"
-                    type="text"
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    placeholder="e.g., Toys, Food, Travel"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
+                {/* Prompt Input */}
+                <PromptInput
+                  value={prompt}
+                  onChange={handlePromptChange}
+                  error={promptError}
+                />
 
-                {/* Style Selector - Placeholder */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Visual Style
-                  </label>
-                  <div className="text-sm text-gray-500">
-                    Style selector will be implemented in task 7.4
-                  </div>
-                </div>
+                {/* Style Selector */}
+                <StyleSelector
+                  styles={styles}
+                  selectedStyle={selectedStyle}
+                  onSelect={handleStyleSelect}
+                />
 
-                {/* Color Input - Placeholder */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Brand Colors (Optional)
-                  </label>
-                  <div className="text-sm text-gray-500">
-                    Color input will be implemented in task 7.7
-                  </div>
-                </div>
+                {/* Color Input */}
+                <ColorInput
+                  colors={brandColors}
+                  onChange={setBrandColors}
+                  maxColors={3}
+                />
 
                 {/* Error Display */}
                 {error && (

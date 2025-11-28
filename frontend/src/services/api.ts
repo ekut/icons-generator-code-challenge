@@ -188,3 +188,7 @@ class APIClient {
 // Export singleton instance
 export const apiClient = new APIClient();
 export default apiClient;
+
+// Export convenience functions
+export const generateIcons = (request: GenerationRequest) => apiClient.generateIcons(request);
+export const getStyles = () => apiClient.getStyles();
