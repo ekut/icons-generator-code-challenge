@@ -1,2 +1,46 @@
-// Type definitions will be added here
-export {};
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+
+// Style Preset Types
+export interface StylePreset {
+  id: string;
+  name: string;
+  description: string;
+  promptModifiers: string[];
+  thumbnail?: string;
+}
+
+// API Request/Response Types
+export interface GenerateRequest {
+  prompt: string;
+  style: string;
+  brandColors?: string[];
+}
+
+export interface GeneratedIcon {
+  id: string;
+  url: string;
+  prompt: string;
+  style: string;
+  generatedAt: number;
+}
+
+export interface GenerateResponse {
+  success: boolean;
+  icons?: GeneratedIcon[];
+  error?: string;
+}
+
+export interface StylesResponse {
+  styles: StylePreset[];
+}
+
+export interface APIError {
+  code: string;
+  message: string;
+  details?: any;
+}
+
+// Lambda Handler Types
+export type LambdaHandler = (
+  event: APIGatewayProxyEvent
+) => Promise<APIGatewayProxyResult>;

@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [ ] 1. Set up project structure and dependencies
+- [x] 1. Set up project structure and dependencies
   - Create separate frontend/ and backend/ folders
   - Initialize frontend with Vite + React + TypeScript
   - Initialize backend with Node.js + TypeScript

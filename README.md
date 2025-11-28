@@ -13,8 +13,8 @@ icon-set-generator/
 
 ## Prerequisites
 
-- Node.js 18.x or higher
-- npm or yarn
+- Node.js 22.x or higher
+- npm
 - AWS Account (for deployment)
 - Replicate API Token
 
@@ -159,9 +159,9 @@ amplify publish
 
 ## Technology Stack
 
-- **Frontend**: React 18, TypeScript, Vite, Tailwind CSS, Axios
-- **Backend**: Node.js, TypeScript, AWS Lambda, Serverless Framework
-- **Testing**: Vitest, React Testing Library, fast-check
+- **Frontend**: React 19, TypeScript, Vite 7, Tailwind CSS 4, Axios
+- **Backend**: Node.js 22.x (ES modules), TypeScript, AWS Lambda, Serverless Framework 4
+- **Testing**: Vitest, React Testing Library, fast-check (property-based testing)
 - **Deployment**: AWS Amplify (frontend), AWS Lambda + API Gateway (backend)
 
 ## License

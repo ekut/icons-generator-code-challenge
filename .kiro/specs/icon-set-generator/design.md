@@ -46,17 +46,18 @@ The system architecture follows a client-server pattern with clear separation be
 
 ### Technology Stack
 
-- **Frontend**: React 18+ with TypeScript
+- **Frontend**: React 19 with TypeScript
 - **Frontend Hosting**: AWS Amplify (with CloudFront CDN)
-- **Backend**: AWS Lambda (Node.js 18.x runtime)
-- **API Gateway**: AWS API Gateway (REST API)
-- **Deployment**: Serverless Framework (for Lambda), Amplify Console (for frontend)
+- **Backend**: AWS Lambda (Node.js 22.x runtime with ES modules)
+- **API Gateway**: AWS API Gateway (HTTP API with CORS)
+- **Deployment**: Serverless Framework 4 (for Lambda), Amplify Console (for frontend)
 - **API Client**: Replicate Node.js SDK
-- **Build Tool**: Vite (chosen for faster builds, better HMR, and optimized production bundles)
+- **Build Tool**: Vite 7 (chosen for faster builds, better HMR, and optimized production bundles)
 - **Testing**: Vitest (for unit tests), fast-check (for property-based tests), React Testing Library
-- **Styling**: Tailwind CSS (for rapid development and responsive design)
+- **Styling**: Tailwind CSS 4 (for rapid development and responsive design)
 - **State Management**: React hooks (useState, useEffect)
 - **HTTP Client**: Axios (for better error handling and interceptors)
+- **Module System**: ES modules for both frontend and backend (`.mjs` files or `"type": "module"` in package.json)
 
 ## Components and Interfaces
 
@@ -143,6 +144,7 @@ interface GenerateResponse {
   error?: string;
 }
 
+// ES module export for Lambda
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   // Parse request body
   // Validate inputs
@@ -150,6 +152,8 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
   // Return response
 };
 ```
+
+**Note:** Lambda handlers use ES module syntax (`export const handler`) rather than CommonJS (`module.exports`). This enables top-level await and aligns with modern JavaScript standards.
 
 #### Lambda Handler: getStyles
 **Trigger**: API Gateway GET /api/styles
@@ -159,6 +163,7 @@ interface StylesResponse {
   styles: StylePreset[];
 }
 
+// ES module export for Lambda
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   // Return predefined style presets
 };
@@ -279,7 +284,7 @@ interface APIError {
 **Validates: Requirements 5.1**
 
 ### Property 11: Image Format Invariant
-*For any* generated or downloaded icon, the file format should be PNG.
+*For any* generated icon, the file format should be PNG (with optional JPG export for downloads).
 **Validates: Requirements 5.2**
 
 ### Property 12: Download Availability
@@ -383,7 +388,7 @@ class ErrorHandler {
 
 ### Unit Testing
 
-The application will use **Jest** for unit testing and **React Testing Library** for component testing.
+The application will use **Vitest** for unit testing and **React Testing Library** for component testing.
 
 **Unit Test Coverage:**
 - Component rendering and user interactions
@@ -399,6 +404,12 @@ The application will use **Jest** for unit testing and **React Testing Library**
 - Test that ColorInput validates HEX format
 - Test that API client constructs correct request payload
 - Test that error handler returns appropriate messages
+
+**Rationale for Vitest:**
+- Native ES module support (aligns with project's module system)
+- Vite-powered for faster test execution
+- Compatible API with Jest for easy migration
+- Better TypeScript integration
 
 ### Property-Based Testing
 
@@ -578,10 +589,12 @@ class ReplicateClient {
 
 **Backend (Lambda):**
 ```
-REPLICATE_API_TOKEN=r8_YLJxtkLyiCXvdTQBfXvv9z4eSTnHMu52iz4eo
+REPLICATE_API_TOKEN=<your-replicate-api-token>
 NODE_ENV=production
 AWS_REGION=us-east-1
 ```
+
+**Note:** Never commit actual API tokens. Use AWS Secrets Manager or Systems Manager Parameter Store for production deployments.
 
 **Frontend (Amplify):**
 ```
@@ -596,7 +609,7 @@ service: icon-generator-api
 
 provider:
   name: aws
-  runtime: nodejs18.x
+  runtime: nodejs22.x  # Latest LTS with ES module support
   region: us-east-1
   stage: ${opt:stage, 'dev'}
   environment:
@@ -625,6 +638,12 @@ plugins:
   - serverless-plugin-typescript
   - serverless-offline  # For local development
 ```
+
+**Rationale for Node.js 22.x:**
+- Latest LTS version with improved performance
+- Native ES module support with top-level await
+- Better TypeScript compatibility
+- Consistent with modern JavaScript standards
 
 ### Amplify Configuration
 
@@ -711,6 +730,30 @@ icon-set-generator/
 - **Amplify**: $0.01 per build minute, $0.15 per GB served
 - **CloudFront**: Included with Amplify
 - **Estimated monthly cost for demo**: < $5 (mostly Replicate API costs)
+
+## Module System Architecture
+
+### Why ES Modules?
+
+The project uses ES modules throughout for consistency and modern JavaScript standards:
+
+**Backend (Lambda):**
+- AWS Lambda recommends ES modules for Node.js 22.x
+- Enables top-level `await` during initialization
+- Better tree-shaking and optimization
+- Consistent with frontend module system
+- Use `export const handler` instead of `module.exports`
+
+**Frontend (Vite):**
+- Vite requires ES modules
+- Native browser support for modern bundling
+- Faster HMR (Hot Module Replacement)
+- Use `import/export` syntax throughout
+
+**Configuration:**
+- Set `"type": "module"` in package.json, OR
+- Use `.mjs` file extensions for compiled output
+- TypeScript compiles to ES modules via tsconfig.json
 
 ## Future Enhancements
 
