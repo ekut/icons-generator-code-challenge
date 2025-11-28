@@ -1,5 +1,6 @@
-import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { GenerationRequest, GeneratedIcon, StylePreset, APIError } from '../types';
+import axios from 'axios';
+import type { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
+import type { GenerationRequest, GeneratedIcon, StylePreset, APIError } from '../types';
 
 /**
  * API Client for Icon Set Generator

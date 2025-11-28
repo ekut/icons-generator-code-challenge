@@ -3,7 +3,7 @@ import type { GeneratedIcon, StylePreset } from './types'
 import { PromptInput } from './components/PromptInput'
 import { StyleSelector } from './components/StyleSelector'
 import { ColorInput, validateHexColor } from './components/ColorInput'
-import { LoadingSpinner } from './components/LoadingSpinner'
+import { IconGrid } from './components/IconGrid'
 import { getStyles, generateIcons } from './services/api'
 import './App.css'
 
@@ -97,15 +97,108 @@ function App() {
   }
 
   // Handler for downloading individual icon
-  const handleDownload = (iconId: string) => {
-    // TODO: Implement download logic (will be implemented in task 9.5)
-    console.log('Downloading icon:', iconId)
+  const handleDownload = async (iconId: string) => {
+    // Find the icon by ID
+    const icon = icons.find(i => i.id === iconId)
+    if (!icon) {
+      console.error('Icon not found:', iconId)
+      return
+    }
+
+    try {
+      // Fetch the image as a blob
+      const response = await fetch(icon.url)
+      if (!response.ok) {
+        throw new Error('Failed to fetch image')
+      }
+      
+      const blob = await response.blob()
+      
+      // Generate descriptive filename based on prompt and style
+      // Format: prompt-style-timestamp.png
+      // Sanitize prompt: remove special characters, replace spaces with hyphens, lowercase
+      const sanitizedPrompt = icon.prompt
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .substring(0, 30) // Limit length
+      
+      const sanitizedStyle = icon.style.toLowerCase().replace(/\s+/g, '-')
+      const timestamp = Date.now()
+      const filename = `${sanitizedPrompt}-${sanitizedStyle}-${timestamp}.png`
+      
+      // Create a temporary download link and trigger download
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      
+      // Cleanup
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Failed to download icon:', err)
+      setError('Failed to download icon. Please try again.')
+    }
   }
 
   // Handler for downloading all icons
-  const handleDownloadAll = () => {
-    // TODO: Implement download all logic (will be implemented in task 9.8)
-    console.log('Downloading all icons')
+  const handleDownloadAll = async () => {
+    if (icons.length === 0) {
+      console.error('No icons to download')
+      return
+    }
+
+    try {
+      // Download each icon sequentially with a small delay to avoid overwhelming the browser
+      for (let i = 0; i < icons.length; i++) {
+        const icon = icons[i]
+        
+        // Fetch the image as a blob
+        const response = await fetch(icon.url)
+        if (!response.ok) {
+          console.error(`Failed to fetch icon ${i + 1}:`, icon.id)
+          continue // Skip this icon and continue with others
+        }
+        
+        const blob = await response.blob()
+        
+        // Generate descriptive filename based on prompt and style
+        // Format: prompt-style-index-timestamp.png
+        // Sanitize prompt: remove special characters, replace spaces with hyphens, lowercase
+        const sanitizedPrompt = icon.prompt
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .substring(0, 30) // Limit length
+        
+        const sanitizedStyle = icon.style.toLowerCase().replace(/\s+/g, '-')
+        const timestamp = Date.now()
+        const filename = `${sanitizedPrompt}-${sanitizedStyle}-${i + 1}-${timestamp}.png`
+        
+        // Create a temporary download link and trigger download
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = filename
+        document.body.appendChild(link)
+        link.click()
+        
+        // Cleanup
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+        
+        // Small delay between downloads to avoid browser blocking
+        if (i < icons.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 300))
+        }
+      }
+    } catch (err) {
+      console.error('Failed to download all icons:', err)
+      setError('Failed to download some icons. Please try again.')
+    }
   }
 
   return (
@@ -181,39 +274,13 @@ function App() {
                 Generated Icons
               </h2>
 
-              {/* Loading State */}
-              {loading && (
-                <LoadingSpinner message="Generating your icons..." />
-              )}
-
-              {/* Empty State */}
-              {!loading && icons.length === 0 && (
-                <div className="text-center py-12">
-                  <svg
-                    className="mx-auto h-12 w-12 text-gray-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                  <p className="mt-4 text-sm text-gray-600">
-                    Your generated icons will appear here
-                  </p>
-                </div>
-              )}
-
-              {/* Icon Grid - Placeholder */}
-              {!loading && icons.length > 0 && (
-                <div className="text-sm text-gray-500">
-                  Icon grid will be implemented in task 9.1
-                </div>
-              )}
+              {/* Icon Grid Component */}
+              <IconGrid
+                icons={icons}
+                loading={loading}
+                onDownload={handleDownload}
+                onDownloadAll={handleDownloadAll}
+              />
             </div>
           </div>
         </div>
