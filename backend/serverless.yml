@@ -1,0 +1,43 @@
+service: icon-generator-api
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ${opt:region, 'us-east-1'}
+  stage: ${opt:stage, 'dev'}
+  environment:
+    REPLICATE_API_TOKEN: ${env:REPLICATE_API_TOKEN}
+    NODE_ENV: production
+  httpApi:
+    cors: true
+
+functions:
+  generateIcons:
+    handler: dist/handlers/generate.handler
+    timeout: 300
+    events:
+      - httpApi:
+          path: /api/generate
+          method: post
+
+  getStyles:
+    handler: dist/handlers/getStyles.handler
+    timeout: 30
+    events:
+      - httpApi:
+          path: /api/styles
+          method: get
+
+plugins:
+  - serverless-offline
+
+custom:
+  serverless-offline:
+    httpPort: 3000
+    noPrependStageInUrl: true
+
+package:
+  patterns:
+    - '!node_modules/**'
+    - '!src/**'
+    - 'dist/**'
