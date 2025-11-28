@@ -13,11 +13,11 @@ export interface StyleSelectorProps {
  */
 export function StyleSelector({ styles, selectedStyle, onSelect, disabled = false }: StyleSelectorProps) {
   return (
-    <div className="mb-4">
-      <label className="block text-sm font-medium text-gray-700 mb-2">
+    <div>
+      <label className="block text-sm font-medium text-gray-900 mb-2">
         Visual Style
       </label>
-      <div className="space-y-2">
+      <div className="space-y-2.5" role="radiogroup" aria-label="Visual style selection">
         {styles.map((style) => {
           const isSelected = selectedStyle === style.id
           
@@ -27,24 +27,25 @@ export function StyleSelector({ styles, selectedStyle, onSelect, disabled = fals
               type="button"
               onClick={() => onSelect(style.id)}
               disabled={disabled}
-              className={`w-full text-left px-4 py-3 rounded-md border-2 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+              className={`w-full text-left px-4 py-3 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                 isSelected
                   ? 'border-blue-600 bg-blue-50 shadow-sm'
-                  : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
-              } ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
-              aria-pressed={isSelected}
+                  : 'border-gray-300 bg-white hover:border-blue-400 hover:bg-blue-50 hover:shadow-sm'
+              } ${disabled ? 'opacity-60 cursor-not-allowed' : 'active:scale-[0.99]'}`}
+              role="radio"
+              aria-checked={isSelected}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center">
-                    <span className={`font-medium ${
+                    <span className={`text-base font-semibold ${
                       isSelected ? 'text-blue-900' : 'text-gray-900'
                     }`}>
                       {style.name}
                     </span>
                     {isSelected && (
                       <svg
-                        className="ml-2 h-5 w-5 text-blue-600"
+                        className="ml-2 h-5 w-5 text-blue-600 flex-shrink-0"
                         fill="currentColor"
                         viewBox="0 0 20 20"
                         aria-hidden="true"

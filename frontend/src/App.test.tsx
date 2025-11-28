@@ -172,7 +172,7 @@ describe('App - Loading States', () => {
 
     // Check that button text changes during loading
     await waitFor(() => {
-      expect(generateButton).toHaveTextContent('Generating...');
+      expect(generateButton).toHaveTextContent('Generating Icons...');
     });
 
     // Wait for generation to complete
@@ -247,7 +247,7 @@ describe('App - Retry Functionality', () => {
     await user.type(promptInput, 'Toys');
 
     // Select a style
-    const styleButton = screen.getByRole('button', { pressed: false });
+    const styleButton = screen.getByRole('radio', { checked: false });
     await user.click(styleButton);
 
     // Add a brand color
@@ -270,8 +270,8 @@ describe('App - Retry Functionality', () => {
     // Verify form inputs are still preserved
     expect(promptInput.value).toBe('Toys');
     expect(colorInput.value).toBe('#FF5733');
-    // Verify style is still selected by checking aria-pressed attribute
-    const selectedStyleButton = screen.getByRole('button', { pressed: true });
+    // Verify style is still selected by checking aria-checked attribute
+    const selectedStyleButton = screen.getByRole('radio', { checked: true });
     expect(selectedStyleButton).toBeInTheDocument();
 
     // Click retry button

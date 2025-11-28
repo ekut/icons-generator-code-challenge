@@ -127,24 +127,24 @@ describe('App - Property-Based Tests', () => {
             // Get the display name for the selected style
             const styleName = styleMap[styleId]
             
-            // Find all style buttons
-            const allButtons = screen.getAllByRole('button')
+            // Find all style radios
+            const allRadios = screen.getAllByRole('radio')
             
-            // Find the specific button for this style by matching the exact text
-            const styleButton = allButtons.find(button => 
-              button.textContent?.includes(styleName) && 
-              button.textContent?.includes(mockStyles.find(s => s.id === styleId)?.description || '')
+            // Find the specific radio for this style by matching the exact text
+            const styleButton = allRadios.find(radio => 
+              radio.textContent?.includes(styleName) && 
+              radio.textContent?.includes(mockStyles.find(s => s.id === styleId)?.description || '')
             )
             
             expect(styleButton).toBeDefined()
             
-            // Click the style button to select it
+            // Click the style radio to select it
             fireEvent.click(styleButton!)
             
-            // Verify the button is highlighted (has aria-pressed="true")
-            expect(styleButton).toHaveAttribute('aria-pressed', 'true')
+            // Verify the radio is highlighted (has aria-checked="true")
+            expect(styleButton).toHaveAttribute('aria-checked', 'true')
             
-            // Verify the button has the selected styling classes
+            // Verify the radio has the selected styling classes
             expect(styleButton!.className).toContain('border-blue-600')
             expect(styleButton!.className).toContain('bg-blue-50')
             
@@ -156,13 +156,13 @@ describe('App - Property-Based Tests', () => {
             for (const otherId of availableStyles) {
               if (otherId !== styleId) {
                 const otherName = styleMap[otherId]
-                const otherButton = allButtons.find(button => 
-                  button.textContent?.includes(otherName) && 
-                  button.textContent?.includes(mockStyles.find(s => s.id === otherId)?.description || '')
+                const otherButton = allRadios.find(radio => 
+                  radio.textContent?.includes(otherName) && 
+                  radio.textContent?.includes(mockStyles.find(s => s.id === otherId)?.description || '')
                 )
                 
                 if (otherButton) {
-                  expect(otherButton).toHaveAttribute('aria-pressed', 'false')
+                  expect(otherButton).toHaveAttribute('aria-checked', 'false')
                   expect(otherButton.className).not.toContain('border-blue-600')
                 }
               }
@@ -229,15 +229,15 @@ describe('App - Property-Based Tests', () => {
               'outline': 'Outline'
             }
             const styleName = styleMap[styleId]
-            const allButtons = screen.getAllByRole('button')
-            const styleButton = allButtons.find(button => 
-              button.textContent?.includes(styleName) && 
-              button.textContent?.includes(mockStyles.find(s => s.id === styleId)?.description || '')
+            const allRadios = screen.getAllByRole('radio')
+            const styleButton = allRadios.find(radio => 
+              radio.textContent?.includes(styleName) && 
+              radio.textContent?.includes(mockStyles.find(s => s.id === styleId)?.description || '')
             )
             fireEvent.click(styleButton!)
             
             // Verify loading indicator is NOT visible before generation
-            expect(screen.queryByText('Generating your icons...')).not.toBeInTheDocument()
+            expect(screen.queryByText('Generating Icons...')).not.toBeInTheDocument()
             
             // Click the generate button to initiate generation
             const generateButton = screen.getByText('Generate Icons')
@@ -250,18 +250,18 @@ describe('App - Property-Based Tests', () => {
             
             // Verify loading indicator IS visible during generation
             await waitFor(() => {
-              expect(screen.getByText('Generating your icons...')).toBeInTheDocument()
+              expect(screen.getByText('Generating Icons...')).toBeInTheDocument()
             }, { timeout: 1000 })
             
             // Verify the loading spinner is present
             const spinner = document.querySelector('.animate-spin')
             expect(spinner).toBeInTheDocument()
             
-            // Verify the generate button shows "Generating..." text
-            expect(screen.getByText('Generating...')).toBeInTheDocument()
+            // Verify the generate button shows "Generating Icons..." text
+            expect(screen.getByText('Generating Icons...')).toBeInTheDocument()
             
             // Verify the generate button is disabled during loading
-            const buttonDuringLoading = screen.getByRole('button', { name: /Generating.../i })
+            const buttonDuringLoading = screen.getByRole('button', { name: /Generating Icons.../i })
             expect(buttonDuringLoading).toBeDisabled()
             
             // Now complete or fail the generation
@@ -368,10 +368,10 @@ describe('App - Property-Based Tests', () => {
               'outline': 'Outline'
             }
             const styleName = styleMap[styleId]
-            const allButtons = screen.getAllByRole('button')
-            const styleButton = allButtons.find(button => 
-              button.textContent?.includes(styleName) && 
-              button.textContent?.includes(mockStyles.find(s => s.id === styleId)?.description || '')
+            const allRadios = screen.getAllByRole('radio')
+            const styleButton = allRadios.find(radio => 
+              radio.textContent?.includes(styleName) && 
+              radio.textContent?.includes(mockStyles.find(s => s.id === styleId)?.description || '')
             )
             fireEvent.click(styleButton!)
             

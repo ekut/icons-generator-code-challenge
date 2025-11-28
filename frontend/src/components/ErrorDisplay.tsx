@@ -85,7 +85,7 @@ export function ErrorDisplay({ error, onRetry, onDismiss }: ErrorDisplayProps) {
 
   return (
     <div
-      className={`${bgColor} ${borderColor} border rounded-lg p-4 mb-4`}
+      className={`${bgColor} ${borderColor} border rounded-lg p-3 sm:p-4 mb-4`}
       role="alert"
       aria-live="assertive"
     >
@@ -93,35 +93,35 @@ export function ErrorDisplay({ error, onRetry, onDismiss }: ErrorDisplayProps) {
         {/* Error Icon */}
         <div className={`flex-shrink-0 ${iconColor}`}>
           {severity === 'error' ? (
-            <XCircle className="h-5 w-5" aria-hidden="true" />
+            <XCircle className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
           ) : (
-            <AlertCircle className="h-5 w-5" aria-hidden="true" />
+            <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
           )}
         </div>
 
         {/* Error Content */}
-        <div className="ml-3 flex-1">
-          <h3 className={`text-sm font-medium ${textColor}`}>
+        <div className="ml-2 sm:ml-3 flex-1">
+          <h3 className={`text-xs sm:text-sm font-medium ${textColor}`}>
             {severity === 'error' ? 'Error' : 'Warning'}
           </h3>
-          <div className={`mt-2 text-sm ${textColor}`}>
+          <div className={`mt-1 sm:mt-2 text-xs sm:text-sm ${textColor}`}>
             <p>{message}</p>
           </div>
 
           {/* Action Buttons */}
           {(isRecoverable || onDismiss) && (
-            <div className="mt-4 flex gap-3">
+            <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row gap-2 sm:gap-3">
               {isRecoverable && onRetry && (
                 <button
                   type="button"
                   onClick={onRetry}
-                  className={`inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md ${
+                  className={`inline-flex items-center justify-center px-3 py-2 border border-transparent text-xs sm:text-sm leading-4 font-medium rounded-md ${
                     severity === 'error'
-                      ? 'text-red-700 bg-red-100 hover:bg-red-200 focus:ring-red-500'
-                      : 'text-yellow-700 bg-yellow-100 hover:bg-yellow-200 focus:ring-yellow-500'
-                  } focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors`}
+                      ? 'text-red-700 bg-red-100 hover:bg-red-200 hover:shadow-sm focus:ring-red-500'
+                      : 'text-yellow-700 bg-yellow-100 hover:bg-yellow-200 hover:shadow-sm focus:ring-yellow-500'
+                  } focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 active:scale-95`}
                 >
-                  <RefreshCw className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                  <RefreshCw className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" aria-hidden="true" />
                   Retry
                 </button>
               )}
@@ -130,13 +130,13 @@ export function ErrorDisplay({ error, onRetry, onDismiss }: ErrorDisplayProps) {
                 <button
                   type="button"
                   onClick={onDismiss}
-                  className={`inline-flex items-center px-3 py-2 border ${
+                  className={`inline-flex items-center justify-center px-3 py-2 border ${
                     severity === 'error'
-                      ? 'border-red-300 text-red-700 hover:bg-red-50'
-                      : 'border-yellow-300 text-yellow-700 hover:bg-yellow-50'
-                  } text-sm leading-4 font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                      ? 'border-red-300 text-red-700 hover:bg-red-50 hover:border-red-400'
+                      : 'border-yellow-300 text-yellow-700 hover:bg-yellow-50 hover:border-yellow-400'
+                  } text-xs sm:text-sm leading-4 font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                     severity === 'error' ? 'focus:ring-red-500' : 'focus:ring-yellow-500'
-                  } transition-colors`}
+                  } transition-all duration-200 hover:shadow-sm active:scale-95`}
                 >
                   Dismiss
                 </button>

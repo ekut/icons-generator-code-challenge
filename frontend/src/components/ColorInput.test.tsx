@@ -80,7 +80,7 @@ describe('ColorInput', () => {
       render(<ColorInput colors={['invalid']} onChange={() => {}} />)
       
       const input = screen.getByRole('textbox')
-      expect(input).toHaveClass('border-red-300')
+      expect(input).toHaveClass('border-red-400')
       expect(input).toHaveAttribute('aria-invalid', 'true')
     })
 

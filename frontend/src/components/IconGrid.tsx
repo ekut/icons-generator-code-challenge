@@ -58,51 +58,64 @@ export function IconGrid({ icons, loading, onDownload, onDownloadAll }: IconGrid
 
   // Success state - display icons in grid
   return (
-    <div>
+    <div className="space-y-6">
       {/* Download All Button */}
       {icons.length > 0 && (
-        <div className="mb-4 flex justify-end">
+        <div className="flex justify-end">
           <button
             onClick={onDownloadAll}
-            className="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors text-sm font-medium"
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-green-600 to-green-700 text-white py-2.5 px-5 rounded-lg hover:from-green-700 hover:to-green-800 hover:shadow-lg hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 text-sm font-semibold active:scale-95 shadow-md"
           >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
             Download All ({icons.length})
           </button>
         </div>
       )}
 
-      {/* Icon Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      {/* Icon Grid - Responsive: 1 col on mobile, 2 cols on sm+, 4 cols on xl+ */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6">
         {icons.map((icon) => (
           <div
             key={icon.id}
-            className="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:border-gray-300 transition-colors"
+            className="group bg-white rounded-xl p-4 border-2 border-gray-200 hover:border-blue-400 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-out"
           >
-            {/* Icon Image */}
-            <div className="aspect-square bg-white rounded-md overflow-hidden mb-3 flex items-center justify-center">
+            {/* Icon Image Container with enhanced styling */}
+            <div className="relative aspect-square bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg overflow-hidden mb-4 shadow-inner">
               <img
                 src={icon.url}
                 alt={`Generated icon: ${icon.prompt}`}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300"
                 loading="lazy"
               />
+              {/* Subtle overlay on hover */}
+              <div className="absolute inset-0 bg-blue-500 opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
             </div>
 
-            {/* Icon Metadata */}
-            <div className="space-y-2">
-              <p className="text-xs text-gray-500 truncate" title={icon.prompt}>
+            {/* Icon Metadata with improved typography */}
+            <div className="space-y-2 mb-4">
+              <p className="text-sm text-gray-700 font-medium truncate" title={icon.prompt}>
                 {icon.prompt}
               </p>
-              <p className="text-xs text-gray-400 capitalize">
-                Style: {icon.style}
-              </p>
+              <div className="flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                </svg>
+                <p className="text-xs text-gray-500 capitalize">
+                  Style: {icon.style}
+                </p>
+              </div>
             </div>
 
-            {/* Download Button */}
+            {/* Enhanced Download Button */}
             <button
               onClick={() => onDownload(icon.id)}
-              className="mt-3 w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-sm font-medium"
+              className="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2.5 px-4 rounded-lg hover:from-blue-700 hover:to-blue-800 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 text-sm font-semibold active:scale-95 shadow-md group-hover:shadow-xl"
             >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
               Download
             </button>
           </div>

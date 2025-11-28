@@ -60,26 +60,26 @@ describe('StyleSelector', () => {
   it('renders correct number of style buttons', () => {
     render(<StyleSelector styles={mockStyles} selectedStyle={null} onSelect={() => {}} />)
     
-    const buttons = screen.getAllByRole('button')
-    expect(buttons).toHaveLength(5)
+    const radios = screen.getAllByRole('radio')
+    expect(radios).toHaveLength(5)
   })
 
   // Test selection highlighting (Requirement 2.2)
   it('highlights the selected style preset', () => {
     render(<StyleSelector styles={mockStyles} selectedStyle="pastels" onSelect={() => {}} />)
     
-    const pastelsButton = screen.getByRole('button', { name: /Pastels/i })
+    const pastelsButton = screen.getByRole('radio', { name: /Pastels/i })
     
     // Check for selected styling classes
     expect(pastelsButton).toHaveClass('border-blue-600')
     expect(pastelsButton).toHaveClass('bg-blue-50')
-    expect(pastelsButton).toHaveAttribute('aria-pressed', 'true')
+    expect(pastelsButton).toHaveAttribute('aria-checked', 'true')
   })
 
   it('displays checkmark icon for selected style', () => {
     render(<StyleSelector styles={mockStyles} selectedStyle="bubbles" onSelect={() => {}} />)
     
-    const bubblesButton = screen.getByRole('button', { name: /Bubbles/i })
+    const bubblesButton = screen.getByRole('radio', { name: /Bubbles/i })
     
     // Check that the checkmark SVG is present
     const svg = bubblesButton.querySelector('svg')
@@ -90,18 +90,18 @@ describe('StyleSelector', () => {
   it('does not highlight unselected styles', () => {
     render(<StyleSelector styles={mockStyles} selectedStyle="pastels" onSelect={() => {}} />)
     
-    const bubblesButton = screen.getByRole('button', { name: /Bubbles/i })
+    const bubblesButton = screen.getByRole('radio', { name: /Bubbles/i })
     
     // Check for unselected styling classes
-    expect(bubblesButton).toHaveClass('border-gray-200')
+    expect(bubblesButton).toHaveClass('border-gray-300')
     expect(bubblesButton).toHaveClass('bg-white')
-    expect(bubblesButton).toHaveAttribute('aria-pressed', 'false')
+    expect(bubblesButton).toHaveAttribute('aria-checked', 'false')
   })
 
   it('does not display checkmark for unselected styles', () => {
     render(<StyleSelector styles={mockStyles} selectedStyle="pastels" onSelect={() => {}} />)
     
-    const bubblesButton = screen.getByRole('button', { name: /Bubbles/i })
+    const bubblesButton = screen.getByRole('radio', { name: /Bubbles/i })
     
     // Check that no checkmark SVG is present
     const svg = bubblesButton.querySelector('svg')
@@ -111,12 +111,12 @@ describe('StyleSelector', () => {
   it('handles no selection state correctly', () => {
     render(<StyleSelector styles={mockStyles} selectedStyle={null} onSelect={() => {}} />)
     
-    const buttons = screen.getAllByRole('button')
+    const radios = screen.getAllByRole('radio')
     
-    // All buttons should be unselected
-    buttons.forEach(button => {
-      expect(button).toHaveClass('border-gray-200')
-      expect(button).toHaveAttribute('aria-pressed', 'false')
+    // All radios should be unselected
+    radios.forEach(radio => {
+      expect(radio).toHaveClass('border-gray-300')
+      expect(radio).toHaveAttribute('aria-checked', 'false')
     })
   })
 
@@ -127,7 +127,7 @@ describe('StyleSelector', () => {
     
     render(<StyleSelector styles={mockStyles} selectedStyle={null} onSelect={handleSelect} />)
     
-    const pastelsButton = screen.getByRole('button', { name: /Pastels/i })
+    const pastelsButton = screen.getByRole('radio', { name: /Pastels/i })
     await user.click(pastelsButton)
     
     expect(handleSelect).toHaveBeenCalledTimes(1)
@@ -140,27 +140,27 @@ describe('StyleSelector', () => {
     
     render(<StyleSelector styles={mockStyles} selectedStyle={null} onSelect={handleSelect} />)
     
-    // Get all buttons and click each one
-    const buttons = screen.getAllByRole('button')
+    // Get all radios and click each one
+    const radios = screen.getAllByRole('radio')
     
-    // Click Pastels (first button)
-    await user.click(buttons[0])
+    // Click Pastels (first radio)
+    await user.click(radios[0])
     expect(handleSelect).toHaveBeenLastCalledWith('pastels')
     
-    // Click Bubbles (second button)
-    await user.click(buttons[1])
+    // Click Bubbles (second radio)
+    await user.click(radios[1])
     expect(handleSelect).toHaveBeenLastCalledWith('bubbles')
     
-    // Click Flat (third button)
-    await user.click(buttons[2])
+    // Click Flat (third radio)
+    await user.click(radios[2])
     expect(handleSelect).toHaveBeenLastCalledWith('flat')
     
-    // Click Gradient (fourth button)
-    await user.click(buttons[3])
+    // Click Gradient (fourth radio)
+    await user.click(radios[3])
     expect(handleSelect).toHaveBeenLastCalledWith('gradient')
     
-    // Click Outline (fifth button)
-    await user.click(buttons[4])
+    // Click Outline (fifth radio)
+    await user.click(radios[4])
     expect(handleSelect).toHaveBeenLastCalledWith('outline')
     
     expect(handleSelect).toHaveBeenCalledTimes(5)
@@ -175,7 +175,7 @@ describe('StyleSelector', () => {
     )
     
     // Click a different style
-    await user.click(screen.getByRole('button', { name: /Bubbles/i }))
+    await user.click(screen.getByRole('radio', { name: /Bubbles/i }))
     
     expect(handleSelect).toHaveBeenCalledWith('bubbles')
     
@@ -183,9 +183,9 @@ describe('StyleSelector', () => {
     rerender(<StyleSelector styles={mockStyles} selectedStyle="bubbles" onSelect={handleSelect} />)
     
     // Verify new selection is highlighted
-    const bubblesButton = screen.getByRole('button', { name: /Bubbles/i })
+    const bubblesButton = screen.getByRole('radio', { name: /Bubbles/i })
     expect(bubblesButton).toHaveClass('border-blue-600')
-    expect(bubblesButton).toHaveAttribute('aria-pressed', 'true')
+    expect(bubblesButton).toHaveAttribute('aria-checked', 'true')
   })
 
   it('allows clicking the same style multiple times', async () => {
@@ -194,7 +194,7 @@ describe('StyleSelector', () => {
     
     render(<StyleSelector styles={mockStyles} selectedStyle="pastels" onSelect={handleSelect} />)
     
-    const pastelsButton = screen.getByRole('button', { name: /Pastels/i })
+    const pastelsButton = screen.getByRole('radio', { name: /Pastels/i })
     
     // Click the already selected style
     await user.click(pastelsButton)
@@ -212,10 +212,10 @@ describe('StyleSelector', () => {
   it('has proper button type attributes', () => {
     render(<StyleSelector styles={mockStyles} selectedStyle={null} onSelect={() => {}} />)
     
-    const buttons = screen.getAllByRole('button')
+    const radios = screen.getAllByRole('radio')
     
-    buttons.forEach(button => {
-      expect(button).toHaveAttribute('type', 'button')
+    radios.forEach(radio => {
+      expect(radio).toHaveAttribute('type', 'button')
     })
   })
 
@@ -223,7 +223,7 @@ describe('StyleSelector', () => {
     render(<StyleSelector styles={[]} selectedStyle={null} onSelect={() => {}} />)
     
     expect(screen.getByText('Visual Style')).toBeInTheDocument()
-    expect(screen.queryAllByRole('button')).toHaveLength(0)
+    expect(screen.queryAllByRole('radio')).toHaveLength(0)
   })
 
   it('handles single style', () => {
@@ -231,7 +231,7 @@ describe('StyleSelector', () => {
     
     render(<StyleSelector styles={singleStyle} selectedStyle={null} onSelect={() => {}} />)
     
-    expect(screen.getAllByRole('button')).toHaveLength(1)
+    expect(screen.getAllByRole('radio')).toHaveLength(1)
     expect(screen.getByText('Pastels')).toBeInTheDocument()
   })
 })
