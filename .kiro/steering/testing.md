@@ -109,6 +109,37 @@ fc.assert(
 );
 ```
 
+## Running Tests
+
+### Correct Test Commands
+
+**IMPORTANT**: Use the correct npm test command for this project:
+
+```bash
+# ✅ CORRECT - Run tests once
+npm test
+
+# ❌ WRONG - This causes "Expected a single value for option --run" error
+npm test -- --run
+```
+
+The `package.json` already includes `--run` flag in the test script:
+```json
+{
+  "scripts": {
+    "test": "vitest --run"
+  }
+}
+```
+
+Adding `-- --run` duplicates the flag and causes an error.
+
+### Test Commands by Context
+
+- **Backend tests**: `cd backend && npm test`
+- **Frontend tests**: `cd frontend && npm test`
+- **Watch mode** (for development): `npm run test:watch` (if configured)
+
 ## Cost Awareness
 
 Remember:

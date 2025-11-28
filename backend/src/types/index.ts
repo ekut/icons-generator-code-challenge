@@ -54,3 +54,10 @@ export {
   NetworkError,
   ErrorHandler,
 } from '../handlers/errorHandler.js';
+
+// Re-export style presets constants for convenience
+export {
+  STYLE_PRESETS,
+  getStyleById,
+  isValidStyleId,
+} from '../constants/stylePresets.js';

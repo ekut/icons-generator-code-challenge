@@ -1,43 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { StylesResponse, StylePreset } from '../types/index.js';
-import { formatSuccessResponse, formatErrorResponse } from './utils.js';
-
-/**
- * Predefined style presets for icon generation
- * These will be used to construct prompts for the FLUX-schnell model
- */
-const STYLE_PRESETS: StylePreset[] = [
-  {
-    id: 'pastels',
-    name: 'Pastels',
-    description: 'Soft, muted colors with gentle gradients',
-    promptModifiers: ['pastel colors', 'soft lighting', 'gentle gradients', 'minimalist'],
-  },
-  {
-    id: 'bubbles',
-    name: 'Bubbles',
-    description: 'Glossy, bubble-like appearance with reflections',
-    promptModifiers: ['glossy', 'bubble style', 'reflective', 'translucent', '3D'],
-  },
-  {
-    id: 'flat',
-    name: 'Flat',
-    description: 'Clean, flat design with solid colors',
-    promptModifiers: ['flat design', 'solid colors', 'minimalist', 'vector style'],
-  },
-  {
-    id: 'gradient',
-    name: 'Gradient',
-    description: 'Vibrant gradients and color transitions',
-    promptModifiers: ['gradient', 'vibrant colors', 'color transitions', 'modern'],
-  },
-  {
-    id: 'outline',
-    name: 'Outline',
-    description: 'Line-based icons with minimal fill',
-    promptModifiers: ['outline style', 'line art', 'minimal', 'stroke-based'],
-  },
-];
+import { StylesResponse } from '../types/index.js';
+import { STYLE_PRESETS } from '../constants/stylePresets.js';
+import { formatSuccessResponse } from './utils.js';
 
 /**
  * Lambda handler for retrieving available style presets
@@ -68,21 +32,17 @@ export const handler = async (
   } catch (error) {
     console.error('Error in getStyles handler:', error);
 
-    if (error instanceof Error) {
-      return formatErrorResponse(
-        error.message,
-        500,
-        'INTERNAL_ERROR'
-      );
-    }
-
-    return formatErrorResponse(
-      'An unexpected error occurred',
-      500,
-      'UNKNOWN_ERROR'
-    );
+    // This endpoint is simple and shouldn't fail, but handle errors gracefully
+    return {
+      statusCode: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        error: 'Failed to retrieve style presets',
+        code: 'INTERNAL_ERROR',
+      }),
+    };
   }
 };
-
-// Export STYLE_PRESETS for use in other modules
-export { STYLE_PRESETS };
