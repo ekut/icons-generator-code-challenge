@@ -64,6 +64,7 @@ export class ReplicateService {
               aspect_ratio: '1:1',
               output_format: 'png',
               output_quality: 100,
+              megapixels: '0.25', // 0.25 megapixels = 512x512 (quarter of default 1024x1024)
             },
           }
         );
@@ -130,6 +131,10 @@ export class ReplicateService {
    * @returns Image URL string
    */
   private extractImageUrl(output: unknown): string {
+    // Log the raw output for debugging
+    console.log('Replicate API output type:', typeof output);
+    console.log('Replicate API output:', JSON.stringify(output, null, 2));
+
     // Handle array output (most common)
     if (Array.isArray(output) && output.length > 0) {
       const firstItem = output[0];
@@ -139,9 +144,16 @@ export class ReplicateService {
         return firstItem;
       }
       
-      // If the item is an object with a url property
+      // If the item is an object with a url property that's a function, call it
       if (typeof firstItem === 'object' && firstItem !== null && 'url' in firstItem) {
-        return String(firstItem.url);
+        const urlValue = (firstItem as any).url;
+        
+        // If url is a function, call it
+        if (typeof urlValue === 'function') {
+          return String(urlValue());
+        }
+        
+        return String(urlValue);
       }
     }
 
@@ -152,7 +164,14 @@ export class ReplicateService {
 
     // Handle object with url property
     if (typeof output === 'object' && output !== null && 'url' in output) {
-      return String((output as { url: unknown }).url);
+      const urlValue = (output as any).url;
+      
+      // If url is a function, call it
+      if (typeof urlValue === 'function') {
+        return String(urlValue());
+      }
+      
+      return String(urlValue);
     }
 
     throw new Error('Unable to extract image URL from Replicate output');

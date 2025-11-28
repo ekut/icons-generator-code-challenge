@@ -97,7 +97,7 @@ function App() {
       // Call API to generate icons with validated inputs
       const generatedIcons = await generateIcons({
         prompt: prompt.trim(),
-        styleId: selectedStyle,
+        style: selectedStyle,
         brandColors: nonEmptyColors
       })
       

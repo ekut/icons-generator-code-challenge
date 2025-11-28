@@ -16,7 +16,7 @@ export interface GeneratedIcon {
 
 export interface GenerationRequest {
   prompt: string;
-  styleId: string;
+  style: string;
   brandColors: string[];
 }
 
