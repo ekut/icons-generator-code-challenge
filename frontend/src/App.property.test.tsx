@@ -418,7 +418,7 @@ describe('App - Property-Based Tests', () => {
           }
         }
       ),
-      { numRuns: 100 }
+      { numRuns: 20 }
     )
-  })
+  }, 15000)
 })

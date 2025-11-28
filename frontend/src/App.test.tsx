@@ -182,6 +182,244 @@ describe('App - Loading States', () => {
   });
 });
 
+describe('App - Retry Functionality', () => {
+  beforeEach(() => {
+    // Mock getStyles
+    vi.spyOn(api, 'getStyles').mockResolvedValue([
+      {
+        id: 'pastels',
+        name: 'Pastels',
+        description: 'Soft, muted colors'
+      }
+    ]);
+  });
+
+  it('should preserve form inputs when retrying after an error', async () => {
+    const user = userEvent.setup();
+    
+    // Mock generateIcons to fail first, then succeed
+    let callCount = 0;
+    vi.spyOn(api, 'generateIcons').mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) {
+        return Promise.reject({
+          code: 'SERVER_ERROR',
+          message: 'Service temporarily unavailable'
+        });
+      }
+      return Promise.resolve([
+        {
+          id: 'icon-1',
+          url: 'https://example.com/icon1.png',
+          prompt: 'Toys',
+          style: 'pastels'
+        },
+        {
+          id: 'icon-2',
+          url: 'https://example.com/icon2.png',
+          prompt: 'Toys',
+          style: 'pastels'
+        },
+        {
+          id: 'icon-3',
+          url: 'https://example.com/icon3.png',
+          prompt: 'Toys',
+          style: 'pastels'
+        },
+        {
+          id: 'icon-4',
+          url: 'https://example.com/icon4.png',
+          prompt: 'Toys',
+          style: 'pastels'
+        }
+      ]);
+    });
+
+    render(<App />);
+
+    // Wait for styles to load
+    await waitFor(() => {
+      expect(screen.getByText('Pastels')).toBeInTheDocument();
+    });
+
+    // Fill in the form
+    const promptInput = screen.getByLabelText(/Icon Theme/i) as HTMLInputElement;
+    await user.type(promptInput, 'Toys');
+
+    // Select a style
+    const styleButton = screen.getByRole('button', { pressed: false });
+    await user.click(styleButton);
+
+    // Add a brand color
+    const addColorButton = screen.getByRole('button', { name: /Add Brand Color/i });
+    await user.click(addColorButton);
+
+    // Type in the color input that was just added
+    const colorInput = screen.getByPlaceholderText(/#[0-9A-F]{6}/i) as HTMLInputElement;
+    await user.type(colorInput, '#FF5733');
+
+    // Click generate button (will fail)
+    const generateButton = screen.getByRole('button', { name: /Generate Icons/i });
+    await user.click(generateButton);
+
+    // Wait for error to appear
+    await waitFor(() => {
+      expect(screen.getByText(/Service temporarily unavailable/i)).toBeInTheDocument();
+    });
+
+    // Verify form inputs are still preserved
+    expect(promptInput.value).toBe('Toys');
+    expect(colorInput.value).toBe('#FF5733');
+    // Verify style is still selected by checking aria-pressed attribute
+    const selectedStyleButton = screen.getByRole('button', { pressed: true });
+    expect(selectedStyleButton).toBeInTheDocument();
+
+    // Click retry button
+    const retryButton = screen.getByRole('button', { name: /retry/i });
+    await user.click(retryButton);
+
+    // Wait for successful generation
+    await waitFor(() => {
+      expect(screen.getAllByRole('img')).toHaveLength(4);
+    });
+
+    // Verify form inputs are STILL preserved after successful retry
+    expect(promptInput.value).toBe('Toys');
+    expect(colorInput.value).toBe('#FF5733');
+  });
+
+  it('should allow users to retry failed generations', async () => {
+    const user = userEvent.setup();
+    
+    // Mock generateIcons to fail - track calls manually
+    const generateIconsCalls: any[] = [];
+    vi.spyOn(api, 'generateIcons').mockImplementation((params) => {
+      generateIconsCalls.push(params);
+      return Promise.reject({
+        code: 'NETWORK_ERROR',
+        message: 'Network connection failed'
+      });
+    });
+
+    render(<App />);
+
+    // Wait for styles to load
+    await waitFor(() => {
+      expect(screen.getByText('Pastels')).toBeInTheDocument();
+    });
+
+    // Fill in the form
+    const promptInput = screen.getByLabelText(/Icon Theme/i);
+    await user.type(promptInput, 'Animals');
+
+    // Select a style
+    const styleButton = screen.getByText('Pastels');
+    await user.click(styleButton);
+
+    // Click generate button (will fail)
+    const generateButton = screen.getByRole('button', { name: /Generate Icons/i });
+    await user.click(generateButton);
+
+    // Wait for error to appear
+    await waitFor(() => {
+      expect(screen.getByText(/Network connection failed/i)).toBeInTheDocument();
+    });
+
+    // Verify retry button is present
+    const retryButton = screen.getByRole('button', { name: /retry/i });
+    expect(retryButton).toBeInTheDocument();
+
+    // Record the number of calls before retry
+    const callsBeforeRetry = generateIconsCalls.length;
+
+    // Click retry button
+    await user.click(retryButton);
+
+    // Verify generateIcons was called again (at least one more time)
+    await waitFor(() => {
+      expect(generateIconsCalls.length).toBeGreaterThan(callsBeforeRetry);
+    });
+  });
+
+  it('should clear error when retry button is clicked', async () => {
+    const user = userEvent.setup();
+    
+    // Mock generateIcons to fail first, then succeed
+    let callCount = 0;
+    vi.spyOn(api, 'generateIcons').mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) {
+        return Promise.reject({
+          code: 'API_ERROR',
+          message: 'API request failed'
+        });
+      }
+      return Promise.resolve([
+        {
+          id: 'icon-1',
+          url: 'https://example.com/icon1.png',
+          prompt: 'Cars',
+          style: 'pastels'
+        },
+        {
+          id: 'icon-2',
+          url: 'https://example.com/icon2.png',
+          prompt: 'Cars',
+          style: 'pastels'
+        },
+        {
+          id: 'icon-3',
+          url: 'https://example.com/icon3.png',
+          prompt: 'Cars',
+          style: 'pastels'
+        },
+        {
+          id: 'icon-4',
+          url: 'https://example.com/icon4.png',
+          prompt: 'Cars',
+          style: 'pastels'
+        }
+      ]);
+    });
+
+    render(<App />);
+
+    // Wait for styles to load
+    await waitFor(() => {
+      expect(screen.getByText('Pastels')).toBeInTheDocument();
+    });
+
+    // Fill in the form
+    const promptInput = screen.getByLabelText(/Icon Theme/i);
+    await user.type(promptInput, 'Cars');
+
+    // Select a style
+    const styleButton = screen.getByText('Pastels');
+    await user.click(styleButton);
+
+    // Click generate button (will fail)
+    const generateButton = screen.getByRole('button', { name: /Generate Icons/i });
+    await user.click(generateButton);
+
+    // Wait for error to appear
+    await waitFor(() => {
+      expect(screen.getByText(/API request failed/i)).toBeInTheDocument();
+    });
+
+    // Click retry button
+    const retryButton = screen.getByRole('button', { name: /retry/i });
+    await user.click(retryButton);
+
+    // Wait for successful generation
+    await waitFor(() => {
+      expect(screen.getAllByRole('img')).toHaveLength(4);
+    });
+
+    // Verify error is cleared
+    expect(screen.queryByText(/API request failed/i)).not.toBeInTheDocument();
+  });
+});
+
 describe('App - Download Functionality', () => {
   // Mock generated icons for testing
   const mockIcons = [

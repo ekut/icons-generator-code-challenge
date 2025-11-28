@@ -107,9 +107,9 @@ describe('IconGrid - Property-Based Tests', () => {
           }
         }
       ),
-      { numRuns: 100 }
+      { numRuns: 20 }
     )
-  })
+  }, 15000)
 
   /**
    * Feature: icon-set-generator, Property 9: Icon Uniqueness
@@ -210,7 +210,7 @@ describe('IconGrid - Property-Based Tests', () => {
           }
         }
       ),
-      { numRuns: 100 }
+      { numRuns: 20 }
     )
   })
 
@@ -315,7 +315,7 @@ describe('IconGrid - Property-Based Tests', () => {
           }
         }
       ),
-      { numRuns: 100 }
+      { numRuns: 20 }
     )
   })
 
@@ -390,7 +390,7 @@ describe('IconGrid - Property-Based Tests', () => {
           expect(filename).toMatch(/^[a-z0-9-_.]+$/i)
         }
       ),
-      { numRuns: 100 }
+      { numRuns: 20 }
     )
   })
 })

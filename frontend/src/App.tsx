@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import type { GeneratedIcon, StylePreset } from './types'
+import type { GeneratedIcon, StylePreset, APIError } from './types'
 import { PromptInput } from './components/PromptInput'
 import { StyleSelector } from './components/StyleSelector'
 import { ColorInput, validateHexColor } from './components/ColorInput'
 import { IconGrid } from './components/IconGrid'
+import { ErrorDisplay } from './components/ErrorDisplay'
 import { getStyles, generateIcons } from './services/api'
 import './App.css'
 
@@ -15,7 +16,7 @@ function App() {
   const [brandColors, setBrandColors] = useState<string[]>([])
   const [icons, setIcons] = useState<GeneratedIcon[]>([])
   const [loading, setLoading] = useState<boolean>(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | APIError | null>(null)
   const [styles, setStyles] = useState<StylePreset[]>([])
 
   // Fetch available styles on component mount
@@ -50,6 +51,18 @@ function App() {
     if (error === 'Please select a style') {
       setError(null)
     }
+  }
+
+  // Handler for retrying generation after an error
+  const handleRetry = () => {
+    // Clear error and retry generation
+    setError(null)
+    handleGenerate()
+  }
+
+  // Handler for dismissing error
+  const handleDismissError = () => {
+    setError(null)
   }
 
   // Handler for form submission
@@ -90,7 +103,14 @@ function App() {
       
       setIcons(generatedIcons)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      // Handle APIError or generic errors
+      if (typeof err === 'object' && err !== null && 'code' in err && 'message' in err) {
+        setError(err as APIError)
+      } else if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError('An unexpected error occurred')
+      }
     } finally {
       setLoading(false)
     }
@@ -249,11 +269,11 @@ function App() {
                 />
 
                 {/* Error Display */}
-                {error && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                    <p className="text-sm text-red-800">{error}</p>
-                  </div>
-                )}
+                <ErrorDisplay
+                  error={error}
+                  onRetry={handleRetry}
+                  onDismiss={handleDismissError}
+                />
 
                 {/* Generate Button */}
                 <button
