@@ -106,24 +106,24 @@
     - **Property 3: HEX Color Validation**
     - **Validates: Requirements 3.2, 3.3**
 
-- [ ] 5. Checkpoint - Ensure backend tests pass
+- [x] 5. Checkpoint - Ensure backend tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 6. Implement React frontend foundation
-  - [ ] 6.1 Create main App component
+  - [x] 6.1 Create main App component
     - Set up component structure
     - Initialize state management
     - Create layout structure
     - _Requirements: 8.1_
 
-  - [ ] 6.2 Implement API client service
+  - [x] 6.2 Implement API client service
     - Create frontend API client using Axios for backend endpoints
     - Implement error handling with Axios interceptors
     - Add request/response interceptors for API Gateway URL
     - Configure timeout and retry logic
     - _Requirements: 7.4_
 
-  - [ ] 6.3 Write unit tests for API client
+  - [x] 6.3 Write unit tests for API client
     - Test successful requests
     - Test error handling
     - Test request formatting
