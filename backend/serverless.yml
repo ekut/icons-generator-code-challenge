@@ -5,39 +5,103 @@ provider:
   runtime: nodejs22.x
   region: ${opt:region, 'us-east-1'}
   stage: ${opt:stage, 'dev'}
+  
+  # Environment variables available to all Lambda functions
   environment:
     REPLICATE_API_TOKEN: ${env:REPLICATE_API_TOKEN}
-    NODE_ENV: production
-  httpApi:
-    cors: true
+    NODE_ENV: ${env:NODE_ENV, 'production'}
+  
+  # API Gateway configuration with CORS (REST API)
+  apiGateway:
+    shouldStartNameWithService: true
+    minimumCompressionSize: 1024
+  
+  # IAM role statements for Lambda functions
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: 'arn:aws:logs:${self:provider.region}:*:*'
+  
+  # Lambda function defaults
+  memorySize: 1024  # MB
+  timeout: 30  # seconds (default, overridden per function)
+  
+  # Deployment configuration
+  deploymentBucket:
+    blockPublicAccess: true
+    serverSideEncryption: AES256
 
 functions:
+  # Generate 4 icons based on prompt and style
   generateIcons:
     handler: dist/handlers/generate.handler
-    timeout: 300
+    description: Generate 4 themed icons using Replicate API
+    timeout: 29  # 29 seconds (API Gateway max is 29s)
+    memorySize: 1024
     events:
-      - httpApi:
-          path: /api/generate
+      - http:
+          path: api/generate
           method: post
+          cors:
+            origin: '*'  # In production, replace with specific domain
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
+    environment:
+      # Function-specific environment variables can be added here
+      LOG_LEVEL: ${env:LOG_LEVEL, 'info'}
 
+  # Get available style presets
   getStyles:
     handler: dist/handlers/getStyles.handler
-    timeout: 30
+    description: Return list of available style presets
+    timeout: 10  # 10 seconds
+    memorySize: 512
     events:
-      - httpApi:
-          path: /api/styles
+      - http:
+          path: api/styles
           method: get
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+            allowCredentials: false
 
 plugins:
   - serverless-offline
 
 custom:
+  # Serverless Offline configuration for local development
   serverless-offline:
     httpPort: 3000
     noPrependStageInUrl: true
+    # Use local environment variables
+    useChildProcesses: true
+    # Enable CORS for local development
+    corsAllowOrigin: '*'
+    corsAllowHeaders: 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'
 
+# Package configuration
 package:
   patterns:
     - '!node_modules/**'
     - '!src/**'
+    - '!test/**'
+    - '!tests/**'
+    - '!*.test.ts'
+    - '!*.spec.ts'
+    - '!.env'
+    - '!.env.*'
+    - '!tsconfig.json'
+    - '!vitest.config.ts'
     - 'dist/**'

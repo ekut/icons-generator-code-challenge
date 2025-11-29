@@ -327,11 +327,11 @@
     - Add hover effects using Tailwind hover: variants
     - _Requirements: 8.1_
 
-- [ ] 14. Final checkpoint - Ensure all tests pass
+- [x] 14. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 15. Create deployment configuration for AWS Serverless
-  - [ ] 15.1 Configure Serverless Framework for backend
+  - [x] 15.1 Configure Serverless Framework for backend
     - Complete serverless.yml with all functions
     - Configure Lambda timeout (300s for image generation)
     - Set up environment variables in serverless.yml
@@ -339,28 +339,28 @@
     - Add serverless-offline plugin for local development
     - _Requirements: 7.2, 9.2_
 
-  - [ ] 15.2 Configure Amplify for frontend
+  - [x] 15.2 Configure Amplify for frontend
     - Create amplify.yml build configuration
     - Configure Vite for optimized production builds
     - Set up environment variable for API Gateway URL
     - Configure SPA fallback routing (redirect all routes to index.html)
     - _Requirements: 9.2_
 
-  - [ ] 15.3 Set up environment variables
+  - [x] 15.3 Set up environment variables
     - Create .env.example files for both frontend and backend
     - Document REPLICATE_API_TOKEN configuration
     - Document VITE_API_GATEWAY_URL configuration
     - Add instructions for AWS Systems Manager Parameter Store (optional)
     - _Requirements: 7.2_
 
-  - [ ] 15.4 Create deployment scripts
+  - [x] 15.4 Create deployment scripts
     - Add npm scripts for backend deployment (serverless deploy)
     - Add npm scripts for local development (serverless offline)
     - Document Amplify Console setup process
     - Create deployment checklist
     - _Requirements: 9.2_
 
-  - [ ] 15.5 Add comprehensive README documentation
+  - [x] 15.5 Add comprehensive README documentation
     - Document local development setup (serverless offline + vite dev)
     - Document Lambda function structure and API endpoints
     - Document Serverless Framework deployment process

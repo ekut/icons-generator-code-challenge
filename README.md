@@ -188,6 +188,60 @@ amplify publish
 - **Testing**: Vitest, React Testing Library, fast-check (property-based testing)
 - **Deployment**: AWS Amplify (frontend), AWS Lambda + API Gateway (backend)
 
+## Detailed Documentation
+
+For comprehensive documentation on specific topics, see:
+
+- **[Backend Documentation](backend/README.md)** - Lambda function structure, API endpoints, deployment, environment variables, troubleshooting, cost estimation
+- **[Frontend Documentation](frontend/README.md)** - Component architecture, testing strategy, deployment to Amplify, environment configuration, troubleshooting
+
+## Troubleshooting
+
+### Common Issues
+
+**Backend won't start locally:**
+- Check if port 3000 is available: `lsof -i :3000`
+- Ensure dependencies are installed: `cd backend && npm install`
+- Verify `.env` file exists with `REPLICATE_API_TOKEN`
+
+**Frontend can't connect to backend:**
+- Verify backend is running at `http://localhost:3000`
+- Check `VITE_API_GATEWAY_URL` in `frontend/.env`
+- Restart frontend dev server after changing `.env`
+
+**Tests failing:**
+- Run `npm run build` in backend to compile TypeScript
+- Ensure all dependencies are installed
+- Check that you're using Node.js 22.x: `node --version`
+
+**Deployment issues:**
+- Verify AWS credentials: `aws sts get-caller-identity`
+- Check IAM permissions for Lambda, API Gateway, CloudFormation
+- Ensure backend builds successfully before deploying
+
+For more detailed troubleshooting, see:
+- [Backend Troubleshooting](backend/README.md#troubleshooting)
+- [Frontend Troubleshooting](frontend/README.md#troubleshooting)
+
+## Cost Estimation
+
+### AWS Free Tier
+
+- **Lambda**: 1M requests/month + 400,000 GB-seconds compute
+- **API Gateway**: 1M API calls/month
+- **Amplify**: 1,000 build minutes/month + 15 GB served/month
+
+### After Free Tier
+
+- **Lambda**: ~$0.20 per 1M requests
+- **API Gateway**: ~$1.00 per 1M requests
+- **Amplify**: $0.01/build minute + $0.15/GB served
+- **Replicate API**: Variable (main cost driver)
+
+**Estimated monthly cost for demo usage**: < $5 (mostly Replicate API costs)
+
+For detailed cost breakdown, see [Backend Documentation](backend/README.md#cost-estimation).
+
 ## License
 
 ISC

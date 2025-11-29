@@ -6,9 +6,14 @@
   "scripts": {
     "build": "tsc",
     "deploy": "npm run build && serverless deploy",
+    "deploy:prod": "npm run build && serverless deploy --stage prod",
     "dev": "serverless offline",
+    "offline": "serverless offline",
     "test": "vitest --run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "info": "serverless info",
+    "logs": "serverless logs -f generateIcons --tail",
+    "remove": "serverless remove"
   },
   "keywords": [],
   "author": "",
