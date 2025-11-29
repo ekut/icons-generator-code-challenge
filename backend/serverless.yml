@@ -94,7 +94,6 @@ custom:
 # Package configuration
 package:
   patterns:
-    - '!node_modules/**'
     - '!src/**'
     - '!test/**'
     - '!tests/**'
@@ -105,3 +104,5 @@ package:
     - '!tsconfig.json'
     - '!vitest.config.ts'
     - 'dist/**'
+    - 'node_modules/**'
+    - 'package.json'
