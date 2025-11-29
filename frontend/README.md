@@ -254,14 +254,16 @@ npm run build
 3. Select **GitHub** as your Git provider
 4. Authorize AWS Amplify to access your GitHub account
 5. Select your repository and branch (e.g., `main`)
-6. **Configure build settings:**
-   - If monorepo: Set **App build and test settings** → **Build settings** → **App root directory** to `frontend`
+6. **Configure monorepo settings:**
+   - Check **"My app is a monorepo"**
+   - Enter app root path: `frontend`
+   - Amplify will automatically set `AMPLIFY_MONOREPO_APP_ROOT=frontend` environment variable
    - Amplify auto-detects `amplify.yml` in the frontend directory
 7. **Add environment variables:**
-   - Click **Advanced settings**
+   - Click **Advanced settings** (or add later in App settings → Environment variables)
    - Add key: `VITE_API_GATEWAY_URL`
-   - Add value: Your API Gateway URL from backend deployment
-8. Click **"Save and deploy"**
+   - Add value: Your API Gateway URL from backend deployment (e.g., `https://abc123.execute-api.us-east-1.amazonaws.com/dev`)
+8. Review build settings and click **"Save and deploy"**
 
 Amplify will automatically:
 - Install dependencies (`npm ci`)
@@ -270,6 +272,11 @@ Amplify will automatically:
 - Provide HTTPS URL
 
 **Deployment time:** ~5 minutes for first deployment
+
+**Important for monorepo:**
+- The `amplify.yml` file includes `appRoot: frontend` which must match the `AMPLIFY_MONOREPO_APP_ROOT` environment variable
+- Build commands run from the `frontend/` directory
+- Artifacts are collected from `frontend/dist/`
 
 **Note:** For static React/Vite apps, you don't need Amplify CLI or Amplify Gen 2. Simple GitHub integration through the Console is sufficient.
 
