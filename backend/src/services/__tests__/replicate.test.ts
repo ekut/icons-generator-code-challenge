@@ -44,13 +44,34 @@ describe('ReplicateService', () => {
       expect(result).toContain('white background');
     });
 
-    it('should include brand colors when provided', () => {
+    it('should include brand colors as natural language when provided', () => {
       const service = new ReplicateService('test-token');
       const buildPrompt = (service as any).buildPrompt.bind(service);
       
-      const result = buildPrompt('toys', mockStylePreset, ['#FF5733', '#33FF57']);
+      const result = buildPrompt('toys', mockStylePreset, ['#FF0000', '#0000FF']);
       
-      expect(result).toContain('using colors #FF5733, #33FF57');
+      // Should convert HEX to color names and integrate into prompt
+      expect(result).toContain('toys in red and blue colors');
+      expect(result).not.toContain('#FF0000');
+      expect(result).not.toContain('#0000FF');
+    });
+
+    it('should handle single brand color correctly', () => {
+      const service = new ReplicateService('test-token');
+      const buildPrompt = (service as any).buildPrompt.bind(service);
+      
+      const result = buildPrompt('toys', mockStylePreset, ['#FF0000']);
+      
+      expect(result).toContain('toys in red color');
+    });
+
+    it('should handle three or more brand colors correctly', () => {
+      const service = new ReplicateService('test-token');
+      const buildPrompt = (service as any).buildPrompt.bind(service);
+      
+      const result = buildPrompt('toys', mockStylePreset, ['#FF0000', '#00FF00', '#0000FF']);
+      
+      expect(result).toContain('toys in red, green, and blue colors');
     });
 
     it('should not include color instruction when brand colors are empty', () => {
@@ -59,7 +80,27 @@ describe('ReplicateService', () => {
       
       const result = buildPrompt('toys', mockStylePreset, []);
       
-      expect(result).not.toContain('using colors');
+      // Should not contain the color instruction pattern " in ... color"
+      // But may contain "color" as part of style modifiers like "pastel colors"
+      expect(result).not.toContain(' in ');
+      const hasColorInstruction = result.includes(' in ') && 
+                                  result.includes('color') &&
+                                  result.indexOf(' in ') < result.indexOf('color');
+      expect(hasColorInstruction).toBe(false);
+    });
+
+    it('should remove conflicting color modifiers when brand colors are provided', () => {
+      const service = new ReplicateService('test-token');
+      const buildPrompt = (service as any).buildPrompt.bind(service);
+      
+      const result = buildPrompt('toys', mockStylePreset, ['#FF0000']);
+      
+      // Should not include "pastel colors" from the style preset
+      expect(result).not.toContain('pastel colors');
+      // But should still include non-color modifiers
+      expect(result).toContain('soft lighting');
+      expect(result).toContain('gentle gradients');
+      expect(result).toContain('minimalist');
     });
 
     it('should include all style modifiers in the prompt', () => {

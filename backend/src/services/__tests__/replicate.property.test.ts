@@ -71,7 +71,7 @@ describe('ReplicateService - Property-Based Tests', () => {
       );
     });
 
-    it('should include all brand colors when provided for any valid color array', () => {
+    it('should convert brand colors to natural language when provided for any valid color array', () => {
       const promptArb = fc.string({ minLength: 1, maxLength: 200 });
       
       const styleArb = fc.record({
@@ -94,13 +94,14 @@ describe('ReplicateService - Property-Based Tests', () => {
           
           const result = buildPrompt(userPrompt, style, brandColors);
           
-          // All brand colors must be present in the constructed prompt
+          // HEX codes should NOT be present in the prompt (converted to names)
           brandColors.forEach(color => {
-            expect(result).toContain(color);
+            expect(result).not.toContain(color);
           });
           
-          // The color instruction prefix should be present
-          expect(result).toContain('using colors');
+          // The color instruction should be integrated into the object description
+          expect(result).toContain(' in ');
+          expect(result).toContain('color');
         }),
         { numRuns: 100 }
       );
@@ -123,11 +124,18 @@ describe('ReplicateService - Property-Based Tests', () => {
           
           // Test with undefined brand colors
           const resultUndefined = buildPrompt(userPrompt, style, undefined);
-          expect(resultUndefined).not.toContain('using colors');
+          // Should not contain color instruction pattern " in ... color"
+          const hasColorInstruction = resultUndefined.includes(' in ') && 
+                                      resultUndefined.includes('color') &&
+                                      resultUndefined.indexOf(' in ') < resultUndefined.indexOf('color');
+          expect(hasColorInstruction).toBe(false);
           
           // Test with empty array
           const resultEmpty = buildPrompt(userPrompt, style, []);
-          expect(resultEmpty).not.toContain('using colors');
+          const hasColorInstructionEmpty = resultEmpty.includes(' in ') && 
+                                           resultEmpty.includes('color') &&
+                                           resultEmpty.indexOf(' in ') < resultEmpty.indexOf('color');
+          expect(hasColorInstructionEmpty).toBe(false);
         }),
         { numRuns: 100 }
       );
@@ -191,10 +199,13 @@ describe('ReplicateService - Property-Based Tests', () => {
           });
           
           if (brandColors && brandColors.length > 0) {
+            // HEX codes should NOT be in the prompt (converted to names)
             brandColors.forEach(color => {
-              expect(result).toContain(color);
+              expect(result).not.toContain(color);
             });
-            expect(result).toContain('using colors');
+            // Color instruction should be integrated
+            expect(result).toContain(' in ');
+            expect(result).toContain('color');
           }
           
           // Template elements

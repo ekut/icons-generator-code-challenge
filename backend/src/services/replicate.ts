@@ -1,5 +1,6 @@
 import Replicate from 'replicate';
 import { StylePreset } from '../types/index.js';
+import { hexToColorName } from '../utils/colorConverter.js';
 
 /**
  * Service for interacting with the Replicate API
@@ -92,8 +93,16 @@ export class ReplicateService {
    * Build a complete prompt for the FLUX-schnell model
    * Combines user prompt, style modifiers, and optional brand colors
    * 
-   * Template: "A simple, clean icon of {user_prompt}, {style_modifiers}, 
-   *            512x512 pixels, icon design, centered, white background{color_instruction}"
+   * When brand colors are provided:
+   * - Converts HEX codes to natural language color names (e.g., #FF5733 -> "coral red")
+   * - Integrates colors directly into the object description for better adherence
+   * - Removes conflicting color-related style modifiers to avoid confusion
+   * 
+   * Template without colors: "A simple, clean icon of {user_prompt}, {style_modifiers}, 
+   *                           512x512 pixels, icon design, centered, white background"
+   * 
+   * Template with colors: "A simple, clean icon of {user_prompt} in {color_names} colors, 
+   *                        {adapted_style_modifiers}, 512x512 pixels, icon design, centered, white background"
    * 
    * @param userPrompt - User's input describing the icon theme
    * @param style - Style preset with prompt modifiers
@@ -107,18 +116,45 @@ export class ReplicateService {
     style: StylePreset,
     brandColors?: string[]
   ): string {
-    // Join style modifiers with commas
-    const styleModifiers = style.promptModifiers.join(', ');
-
-    // Build color instruction if brand colors are provided
     let colorInstruction = '';
+    let adaptedModifiers = [...style.promptModifiers];
+
+    // If brand colors are provided, convert them to natural language
+    // and adapt the style modifiers to avoid conflicts
     if (brandColors && brandColors.length > 0) {
-      const colorList = brandColors.join(', ');
-      colorInstruction = `, using colors ${colorList}`;
+      // Convert HEX codes to natural language color names
+      const colorNames = brandColors.map(hex => hexToColorName(hex));
+      
+      // Remove conflicting color-related modifiers from the style
+      // This prevents the AI from being confused by contradictory instructions
+      adaptedModifiers = adaptedModifiers.filter(modifier => {
+        const lowerMod = modifier.toLowerCase();
+        return !lowerMod.includes('color') && 
+               !lowerMod.includes('vibrant') &&
+               !lowerMod.includes('muted') &&
+               !lowerMod.includes('pastel');
+      });
+      
+      // Build color instruction integrated into the object description
+      // Format: "in coral red and bright green colors"
+      if (colorNames.length === 1) {
+        colorInstruction = ` in ${colorNames[0]} color`;
+      } else if (colorNames.length === 2) {
+        colorInstruction = ` in ${colorNames[0]} and ${colorNames[1]} colors`;
+      } else {
+        // For 3+ colors, use comma-separated list with "and" before the last one
+        const lastColor = colorNames[colorNames.length - 1];
+        const otherColors = colorNames.slice(0, -1).join(', ');
+        colorInstruction = ` in ${otherColors}, and ${lastColor} colors`;
+      }
     }
 
-    // Construct the full prompt following the template
-    const fullPrompt = `A simple, clean icon of ${userPrompt}, ${styleModifiers}, 512x512 pixels, icon design, centered, white background${colorInstruction}`;
+    // Join adapted style modifiers with commas
+    const styleModifiers = adaptedModifiers.join(', ');
+
+    // Construct the full prompt
+    // Color instruction is placed right after the user prompt for better adherence
+    const fullPrompt = `A simple, clean icon of ${userPrompt}${colorInstruction}, ${styleModifiers}, 512x512 pixels, icon design, centered, white background`;
 
     return fullPrompt;
   }

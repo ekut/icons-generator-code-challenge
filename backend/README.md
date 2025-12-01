@@ -246,6 +246,26 @@ src/
 └── __fixtures__/          # Test fixtures (mocked responses)
 ```
 
+## Brand Color Handling
+
+The system automatically converts HEX color codes to natural language that AI models understand:
+
+- `#FF0000` → `"red"`
+- `#FF5733` → `"light orange"`
+- `#33FF57` → `"bright green"`
+- `#FFB6C1` → `"pink"`
+
+**How it works:**
+1. HEX codes are converted using Euclidean distance in RGB space
+2. Descriptive modifiers added (light, dark, bright, muted)
+3. Colors integrated directly into prompt: `"toys in red and blue colors"`
+4. Conflicting style modifiers automatically removed
+
+**Test color conversion:**
+```bash
+node test-colors.mjs
+```
+
 ## API Endpoints
 
 ### POST /api/generate
@@ -257,7 +277,7 @@ Generate 4 themed icons.
 {
   "prompt": "toys",
   "style": "pastels",
-  "brandColors": ["#FF5733"]  // optional
+  "brandColors": ["#FF5733", "#33FF57"]  // optional, HEX format
 }
 ```
 
@@ -271,6 +291,8 @@ Generate 4 themed icons.
   ]
 }
 ```
+
+**Note:** Brand colors are automatically converted to natural language for better AI adherence.
 
 ### GET /api/styles
 
